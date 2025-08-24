@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>org.creati</groupId>
 	<artifactId>siclo-reservations-api</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>siclo-reservations-api</name>
 	<description>Excel parser and statistics API</description>
 	<url/>
