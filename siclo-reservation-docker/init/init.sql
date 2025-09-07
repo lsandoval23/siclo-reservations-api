@@ -1,9 +1,20 @@
 -- ========================
--- Tabla de clientes
+-- Drops
+-- ========================
+DROP TABLE IF EXISTS payment_transaction CASCADE;
+DROP TABLE IF EXISTS reservation CASCADE;
+DROP TABLE IF EXISTS room CASCADE;
+DROP TABLE IF EXISTS studio CASCADE;
+DROP TABLE IF EXISTS discipline CASCADE;
+DROP TABLE IF EXISTS instructor CASCADE;
+DROP TABLE IF EXISTS client CASCADE;
+
+-- ========================
+-- Client Table
 -- ========================
 CREATE TABLE client (
     client_id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name           VARCHAR(150),
+    name           VARCHAR(150) UNIQUE NOT NULL,
     email          VARCHAR(150) NOT NULL,
     phone          VARCHAR(50),
     document_id    VARCHAR(50),
@@ -11,29 +22,29 @@ CREATE TABLE client (
 );
 
 -- ========================
--- Tabla de estudios/locales
+-- Studio Table
 -- ========================
 CREATE TABLE studio (
     studio_id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name           VARCHAR(150) NOT NULL,
+    name           VARCHAR(150) UNIQUE NOT NULL,
     country        VARCHAR(100),
     city           VARCHAR(100),
     created_at     TIMESTAMP DEFAULT now()
 );
 
 -- ========================
--- Tabla de salones (rooms)
+-- Room Table
 -- ========================
 CREATE TABLE room (
     room_id        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     studio_id      BIGINT NOT NULL,
-    name           VARCHAR(100) NOT NULL,
+    name           VARCHAR(100) UNIQUE NOT NULL,
     created_at     TIMESTAMP DEFAULT now(),
     CONSTRAINT fk_room_studio FOREIGN KEY (studio_id) REFERENCES studio(studio_id) ON DELETE CASCADE
 );
 
 -- ========================
--- Tabla de disciplinas
+-- Discipline Table
 -- ========================
 CREATE TABLE discipline (
     discipline_id  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -41,15 +52,15 @@ CREATE TABLE discipline (
 );
 
 -- ========================
--- Tabla de instructores
+-- Instructor Table
 -- ========================
 CREATE TABLE instructor (
     instructor_id  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name           VARCHAR(150) NOT NULL
+    name           VARCHAR(150) UNIQUE NOT NULL
 );
 
 -- ========================
--- Tabla de reservas
+-- Reservation Table
 -- ========================
 CREATE TABLE reservation (
     reservation_id   BIGINT PRIMARY KEY,
@@ -71,7 +82,7 @@ CREATE TABLE reservation (
 );
 
 -- ========================
--- Tabla de pagos
+-- Payment Transaction Table
 -- ========================
 CREATE TABLE payment_transaction (
     transaction_id     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -95,7 +106,7 @@ CREATE TABLE payment_transaction (
 );
 
 -- ========================
--- Índices útiles
+-- Indexes
 -- ========================
 CREATE INDEX idx_room_studio             ON room(studio_id);
 CREATE INDEX idx_reservation_room        ON reservation(room_id);
