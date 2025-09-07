@@ -8,7 +8,7 @@ import org.creati.sicloReservationsApi.dao.postgre.ReservationRepository;
 import org.creati.sicloReservationsApi.dao.postgre.RoomRepository;
 import org.creati.sicloReservationsApi.dao.postgre.StudioRepository;
 import org.creati.sicloReservationsApi.dao.postgre.model.Reservation;
-import org.creati.sicloReservationsApi.excel.model.ReservationExcel;
+import org.creati.sicloReservationsApi.file.model.ReservationExcel;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

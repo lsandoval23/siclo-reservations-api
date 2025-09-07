@@ -1,4 +1,4 @@
-package org.creati.sicloReservationsApi.excel.model;
+package org.creati.sicloReservationsApi.file.model;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

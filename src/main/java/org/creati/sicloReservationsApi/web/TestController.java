@@ -1,7 +1,7 @@
 package org.creati.sicloReservationsApi.web;
 
 
-import org.creati.sicloReservationsApi.excel.ExcelProcessingService;
+import org.creati.sicloReservationsApi.file.FileProcessingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,10 +13,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/v1/test")
 public class TestController {
 
-    private final ExcelProcessingService excelProcessingService;
+    private final FileProcessingService fileProcessingService;
 
-    public TestController(ExcelProcessingService excelProcessingService) {
-        this.excelProcessingService = excelProcessingService;
+    public TestController(FileProcessingService fileProcessingService) {
+        this.fileProcessingService = fileProcessingService;
     }
 
 
@@ -28,7 +28,7 @@ public class TestController {
     public ResponseEntity<Void> process(
             @RequestPart ("file") MultipartFile fileContent
     ) {
-        excelProcessingService.processReservationExcel(fileContent);
+        fileProcessingService.processReservationsFile(fileContent);
         return ResponseEntity.ok().build();
     }
 }

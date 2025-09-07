@@ -1,4 +1,4 @@
-package org.creati.sicloReservationsApi.excel.model;
+package org.creati.sicloReservationsApi.file.model;
 
 
 import lombok.Builder;
@@ -9,7 +9,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class ExcelProcessingResult {
+public class ProcessingResult {
 
     private boolean success;
     private String message;
