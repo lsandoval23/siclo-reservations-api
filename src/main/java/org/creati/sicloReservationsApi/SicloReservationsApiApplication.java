@@ -1,4 +1,4 @@
-package org.creati.siclo_reservations_api;
+package org.creati.sicloReservationsApi;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

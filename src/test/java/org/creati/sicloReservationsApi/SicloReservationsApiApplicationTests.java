@@ -1,4 +1,4 @@
-package org.creati.siclo_reservations_api;
+package org.creati.sicloReservationsApi;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

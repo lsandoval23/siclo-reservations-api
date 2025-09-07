@@ -1,14 +1,10 @@
--- Crear esquema (opcional, puedes usar "public")
-CREATE SCHEMA IF NOT EXISTS sport_center;
-SET search_path TO sport_center;
-
 -- ========================
 -- Tabla de clientes
 -- ========================
 CREATE TABLE client (
     client_id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name           VARCHAR(150) NOT NULL,
-    email          VARCHAR(150),
+    name           VARCHAR(150),
+    email          VARCHAR(150) NOT NULL,
     phone          VARCHAR(50),
     document_id    VARCHAR(50),
     created_at     TIMESTAMP DEFAULT now()
@@ -22,8 +18,18 @@ CREATE TABLE studio (
     name           VARCHAR(150) NOT NULL,
     country        VARCHAR(100),
     city           VARCHAR(100),
-    room           VARCHAR(100),
     created_at     TIMESTAMP DEFAULT now()
+);
+
+-- ========================
+-- Tabla de salones (rooms)
+-- ========================
+CREATE TABLE room (
+    room_id        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    studio_id      BIGINT NOT NULL,
+    name           VARCHAR(100) NOT NULL,
+    created_at     TIMESTAMP DEFAULT now(),
+    CONSTRAINT fk_room_studio FOREIGN KEY (studio_id) REFERENCES studio(studio_id) ON DELETE CASCADE
 );
 
 -- ========================
@@ -48,16 +54,20 @@ CREATE TABLE instructor (
 CREATE TABLE reservation (
     reservation_id   BIGINT PRIMARY KEY,
     class_id         BIGINT NOT NULL,
-    studio_id        BIGINT NOT NULL,
+    room_id          BIGINT NOT NULL,
     discipline_id    BIGINT NOT NULL,
     instructor_id    BIGINT NOT NULL,
     client_id        BIGINT NOT NULL,
-    guide            VARCHAR(150),
-    time             TIMESTAMP,
+    reservation_date DATE NOT NULL,
+    reservation_time TIME NOT NULL,
     order_creator    VARCHAR(150),
     payment_method   VARCHAR(100),
     status           VARCHAR(50),
-    created_at       TIMESTAMP DEFAULT now()
+    created_at       TIMESTAMP DEFAULT now(),
+    CONSTRAINT fk_reservation_room       FOREIGN KEY (room_id) REFERENCES room(room_id) ON DELETE CASCADE,
+    CONSTRAINT fk_reservation_discipline FOREIGN KEY (discipline_id) REFERENCES discipline(discipline_id) ON DELETE CASCADE,
+    CONSTRAINT fk_reservation_instructor FOREIGN KEY (instructor_id) REFERENCES instructor(instructor_id) ON DELETE CASCADE,
+    CONSTRAINT fk_reservation_client     FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE
 );
 
 -- ========================
@@ -80,25 +90,15 @@ CREATE TABLE payment_transaction (
     payment_method     VARCHAR(100),
     package            VARCHAR(100),
     class_count        INT,
-    created_at         TIMESTAMP DEFAULT now()
+    created_at         TIMESTAMP DEFAULT now(),
+    CONSTRAINT fk_payment_client FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE
 );
-
--- ========================
--- Llaves foráneas
--- ========================
-ALTER TABLE reservation
-  ADD CONSTRAINT fk_reservation_studio FOREIGN KEY (studio_id) REFERENCES studio(studio_id) ON DELETE CASCADE,
-  ADD CONSTRAINT fk_reservation_discipline FOREIGN KEY (discipline_id) REFERENCES discipline(discipline_id) ON DELETE CASCADE,
-  ADD CONSTRAINT fk_reservation_instructor FOREIGN KEY (instructor_id) REFERENCES instructor(instructor_id) ON DELETE CASCADE,
-  ADD CONSTRAINT fk_reservation_client FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE;
-
-ALTER TABLE payment_transaction
-  ADD CONSTRAINT fk_payment_client FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE;
 
 -- ========================
 -- Índices útiles
 -- ========================
-CREATE INDEX idx_reservation_studio      ON reservation(studio_id);
+CREATE INDEX idx_room_studio             ON room(studio_id);
+CREATE INDEX idx_reservation_room        ON reservation(room_id);
 CREATE INDEX idx_reservation_client      ON reservation(client_id);
 CREATE INDEX idx_reservation_discipline  ON reservation(discipline_id);
 CREATE INDEX idx_payment_client          ON payment_transaction(client_id);

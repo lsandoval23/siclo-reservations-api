@@ -1,3 +1,17 @@
 spring:
   application:
     name: siclo-reservations-api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/siclo-reservations
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+      show-sql: true
+      jdbc:
+        batch_size: 100
+        batch_versioned_data: true
+      order_inserts: true
+      order_updates: true
