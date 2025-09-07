@@ -174,7 +174,7 @@ public class ExcelProcessingService {
             Client client = Client.builder()
                     .email(email)
                     .build();
-            return clientRepository.saveAndFlush(client);
+            return clientRepository.save(client);
         });
 
         Studio newStudio = cache.getStudiosByName().computeIfAbsent(dto.getStudioName(), name -> {

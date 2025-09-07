@@ -14,8 +14,8 @@ DROP TABLE IF EXISTS client CASCADE;
 -- ========================
 CREATE TABLE client (
     client_id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name           VARCHAR(150) UNIQUE NOT NULL,
-    email          VARCHAR(150) NOT NULL,
+    name           VARCHAR(150) ,
+    email          VARCHAR(150) UNIQUE NOT NULL,
     phone          VARCHAR(50),
     document_id    VARCHAR(50),
     created_at     TIMESTAMP DEFAULT now()
