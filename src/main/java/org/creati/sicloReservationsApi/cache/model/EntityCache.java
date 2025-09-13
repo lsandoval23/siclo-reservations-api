@@ -1,6 +1,5 @@
 package org.creati.sicloReservationsApi.cache.model;
 
-import lombok.Builder;
 import lombok.Data;
 import org.creati.sicloReservationsApi.dao.postgre.model.Client;
 import org.creati.sicloReservationsApi.dao.postgre.model.Discipline;
@@ -17,7 +16,7 @@ import java.util.Set;
 public class EntityCache {
 
 
-    private Map<String, Client> clientsByName = new HashMap<>();
+    private Map<String, Client> clientsByEmail = new HashMap<>();
     private Map<String, Studio> studiosByName = new HashMap<>();
     private Map<String, Room> roomsByStudioAndName = new HashMap<>();
     private Map<String, Discipline> disciplinesByName = new HashMap<>();

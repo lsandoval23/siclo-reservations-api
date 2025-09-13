@@ -5,6 +5,6 @@ import org.springframework.web.multipart.MultipartFile;
 public interface FileProcessingService {
 
     void processReservationsFile(MultipartFile fileData);
-    void processTransactionsFile(MultipartFile fileData);
+    void processPaymentTransactionsFile(MultipartFile fileData);
 
 }

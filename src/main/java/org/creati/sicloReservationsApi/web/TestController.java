@@ -21,7 +21,7 @@ public class TestController {
 
 
     @PostMapping(
-            value = "",
+            value = "/reservations",
             produces = "application/json",
             consumes = "multipart/form-data"
     )
@@ -29,6 +29,18 @@ public class TestController {
             @RequestPart ("file") MultipartFile fileContent
     ) {
         fileProcessingService.processReservationsFile(fileContent);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(
+            value = "/payments",
+            produces = "application/json",
+            consumes = "multipart/form-data"
+    )
+    public ResponseEntity<Void> processPayments(
+            @RequestPart ("file") MultipartFile fileContent
+    ) {
+        fileProcessingService.processPaymentTransactionsFile(fileContent);
         return ResponseEntity.ok().build();
     }
 }

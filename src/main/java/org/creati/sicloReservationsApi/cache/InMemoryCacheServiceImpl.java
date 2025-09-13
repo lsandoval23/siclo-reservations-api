@@ -8,7 +8,8 @@ import org.creati.sicloReservationsApi.dao.postgre.ReservationRepository;
 import org.creati.sicloReservationsApi.dao.postgre.RoomRepository;
 import org.creati.sicloReservationsApi.dao.postgre.StudioRepository;
 import org.creati.sicloReservationsApi.dao.postgre.model.Reservation;
-import org.creati.sicloReservationsApi.file.model.ReservationExcel;
+import org.creati.sicloReservationsApi.file.model.PaymentDto;
+import org.creati.sicloReservationsApi.file.model.ReservationDto;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,24 +36,24 @@ public class InMemoryCacheServiceImpl implements EntityCacheService {
     }
 
     @Override
-    public EntityCache preloadEntitiesForReservation(List<ReservationExcel> reservations) {
+    public EntityCache preloadEntitiesForReservation(List<ReservationDto> reservations) {
 
         EntityCache entityCache = new EntityCache();
 
         // Preload clients by email
         Set<String> clientEmails = reservations.stream()
-                .map(ReservationExcel::getClientEmail)
+                .map(ReservationDto::getClientEmail)
                 .collect(Collectors.toSet());
 
         clientRepository.findAll().forEach(client -> {
             if (clientEmails.contains(client.getEmail())) {
-                entityCache.getClientsByName().put(client.getName(), client);
+                entityCache.getClientsByEmail().put(client.getEmail(), client);
             }
         });
 
         // Preload studios
         Set<String> studioNames = reservations.stream()
-                .map(ReservationExcel::getStudioName)
+                .map(ReservationDto::getStudioName)
                 .collect(Collectors.toSet());
 
         studioRepository.findAll().forEach(studio -> {
@@ -63,7 +64,7 @@ public class InMemoryCacheServiceImpl implements EntityCacheService {
 
         // Preload disciplines
         Set<String> disciplineNames = reservations.stream()
-                .map(ReservationExcel::getDisciplineName)
+                .map(ReservationDto::getDisciplineName)
                 .collect(Collectors.toSet());
         disciplineRepository.findAll().forEach(discipline -> {
             if (disciplineNames.contains(discipline.getName())) {
@@ -73,7 +74,7 @@ public class InMemoryCacheServiceImpl implements EntityCacheService {
 
         // Preload instructors
         Set<String> instructorNames = reservations.stream()
-                .map(ReservationExcel::getInstructorName)
+                .map(ReservationDto::getInstructorName)
                 .collect(Collectors.toSet());
         instructorRepository.findAll().forEach(instructor -> {
             if (instructorNames.contains(instructor.getName())) {
@@ -89,12 +90,31 @@ public class InMemoryCacheServiceImpl implements EntityCacheService {
 
         // Pre-cargar IDs de reservas existentes
         Set<Long> reservationIds = reservations.stream()
-                .map(ReservationExcel::getReservationId)
+                .map(ReservationDto::getReservationId)
                 .collect(Collectors.toSet());
         entityCache.getExistingReservationIds().addAll(reservationRepository.findAllById(reservationIds)
                 .stream()
                 .map(Reservation::getReservationId)
                 .collect(Collectors.toSet()));
+
+        return entityCache;
+    }
+
+    @Override
+    public EntityCache preloadEntitiesForPayments(List<PaymentDto> payments) {
+
+        EntityCache entityCache = new EntityCache();
+
+        // Preload clients by email
+        Set<String> clientEmails = payments.stream()
+                .map(PaymentDto::getClientEmail)
+                .collect(Collectors.toSet());
+
+        clientRepository.findAll().forEach(client -> {
+            if (clientEmails.contains(client.getEmail())) {
+                entityCache.getClientsByEmail().put(client.getEmail(), client);
+            }
+        });
 
         return entityCache;
     }

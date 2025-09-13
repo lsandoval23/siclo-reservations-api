@@ -1,0 +1,36 @@
+package org.creati.sicloReservationsApi.file.model;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class PaymentDto {
+
+    private Integer month;
+    private Integer day;
+    private Integer week;
+    private LocalDate purchaseDate;
+    private LocalDate accreditationDate;
+    private LocalDate releaseDate;
+
+    @NotBlank(message = "Email es obligatorio")
+    private String clientEmail;
+
+    private String phone;
+    private String documentId;
+    private String operationType;
+    private BigDecimal productValue;
+    private BigDecimal transactionFee;
+    private BigDecimal amountReceived;
+    private Integer installments;
+    private String paymentMethod;
+    private String packageName;
+    private Integer classCount;
+}

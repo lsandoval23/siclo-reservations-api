@@ -13,7 +13,7 @@ import java.time.LocalTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReservationExcel {
+public class ReservationDto {
 
     @NotNull(message = "ID de reserva es obligatorio")
     private Long reservationId;

@@ -1,27 +1,18 @@
 package org.creati.sicloReservationsApi.file.excel;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.creati.sicloReservationsApi.cache.EntityCacheService;
 import org.creati.sicloReservationsApi.cache.model.EntityCache;
-import org.creati.sicloReservationsApi.dao.postgre.DisciplineRepository;
-import org.creati.sicloReservationsApi.dao.postgre.InstructorRepository;
 import org.creati.sicloReservationsApi.dao.postgre.ReservationRepository;
-import org.creati.sicloReservationsApi.dao.postgre.RoomRepository;
-import org.creati.sicloReservationsApi.dao.postgre.StudioRepository;
 import org.creati.sicloReservationsApi.dao.postgre.model.Reservation;
 import org.creati.sicloReservationsApi.file.FileProcessingService;
+import org.creati.sicloReservationsApi.file.model.PaymentDto;
 import org.creati.sicloReservationsApi.file.model.ProcessingResult;
-import org.creati.sicloReservationsApi.file.model.ReservationExcel;
-import org.creati.sicloReservationsApi.file.excel.util.ExcelUtils;
+import org.creati.sicloReservationsApi.file.model.ReservationDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,20 +36,24 @@ public class ExcelProcessingService implements FileProcessingService {
     @Override
     @Transactional
     public void processReservationsFile(MultipartFile fileData) {
-        log.info("Starting processing of Excel file: {}", fileData.getOriginalFilename());
-        List<ReservationExcel> reservationList = parser.parseReservationsFromFile(fileData);
+        log.info("Starting processing reservation file: {}", fileData.getOriginalFilename());
+        List<ReservationDto> reservationList = parser.parseReservationsFromFile(fileData);
         EntityCache cache = entityCacheService.preloadEntitiesForReservation(reservationList);
         processReservationsBatch(reservationList, cache);
     }
 
     @Override
     @Transactional
-    public void processTransactionsFile(MultipartFile fileData) {
+    public void processPaymentTransactionsFile(MultipartFile fileData) {
+        log.info("Starting processing transaction file: {}", fileData.getOriginalFilename());
+        List<PaymentDto> paymentList = parser.parsePaymentsFromFile(fileData);
+        EntityCache cache =  entityCacheService.preloadEntitiesForPayments(paymentList);
+
 
     }
 
 
-    private void processReservationsBatch(List<ReservationExcel> reservations, EntityCache cache) {
+    private void processReservationsBatch(List<ReservationDto> reservations, EntityCache cache) {
         List<String> errors = new ArrayList<>();
         List<Reservation> reservationsToSave = new ArrayList<>();
 
@@ -66,7 +61,7 @@ public class ExcelProcessingService implements FileProcessingService {
         int errorRows = 0;
 
         for (int i = 1; i < reservations.size(); i++) {
-            ReservationExcel reservation = reservations.get(i);
+            ReservationDto reservation = reservations.get(i);
             try {
                 if (cache.getExistingReservationIds().contains(reservation.getReservationId())){
                     log.warn("Skipping existing reservation ID: {}", reservation.getReservationId());
