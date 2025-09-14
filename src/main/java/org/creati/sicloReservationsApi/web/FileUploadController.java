@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/v1/test")
-public class TestController {
+@RequestMapping("/files/upload")
+public class FileUploadController {
 
     private final FileProcessingService fileProcessingService;
 
-    public TestController(FileProcessingService fileProcessingService) {
+    public FileUploadController(FileProcessingService fileProcessingService) {
         this.fileProcessingService = fileProcessingService;
     }
 
