@@ -114,3 +114,33 @@ CREATE INDEX idx_reservation_client      ON reservation(client_id);
 CREATE INDEX idx_reservation_discipline  ON reservation(discipline_id);
 CREATE INDEX idx_payment_client          ON payment_transaction(client_id);
 CREATE INDEX idx_payment_method          ON payment_transaction(payment_method);
+
+-- ========================
+-- Functions
+-- ========================
+
+CREATE OR REPLACE FUNCTION get_reservations_report(
+    group_by TEXT,
+    from_date DATE,
+    to_date DATE
+)
+RETURNS TABLE(group_name TEXT, reservation_date DATE, total BIGINT)
+LANGUAGE sql
+AS $$
+SELECT
+    (CASE
+        WHEN group_by = 'studio'    THEN s.name
+        WHEN group_by = 'instructor' THEN i.name
+        WHEN group_by = 'discipline' THEN d.name
+    END)::text AS group_name,
+    r.reservation_date,
+    COUNT(r.reservation_id)::bigint AS total
+FROM reservation r
+LEFT JOIN room rm      ON r.room_id = rm.room_id
+LEFT JOIN studio s     ON rm.studio_id = s.studio_id
+LEFT JOIN instructor i ON r.instructor_id = i.instructor_id
+LEFT JOIN discipline d ON r.discipline_id = d.discipline_id
+WHERE r.reservation_date BETWEEN from_date AND to_date
+GROUP BY group_name, r.reservation_date
+ORDER BY group_name, r.reservation_date;
+$$;
