@@ -13,6 +13,11 @@ services:
     restart: always
     networks:
       - siclo-reservations-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d siclo-reservations" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4
@@ -25,6 +30,21 @@ services:
     depends_on:
       - siclo-reservations-db
     restart: always
+    networks:
+      - siclo-reservations-net
+
+  siclo-reservations-app:
+    build: ..
+    container_name: siclo-reservations-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://siclo-reservations-db:5432/siclo-reservations
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    depends_on:
+      siclo-reservations-db:
+        condition: service_healthy
     networks:
       - siclo-reservations-net
 
