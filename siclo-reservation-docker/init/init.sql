@@ -82,6 +82,70 @@ CREATE TABLE reservation (
 );
 
 -- ========================
+-- User Table
+-- ========================
+
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ========================
+-- Roles Table
+-- ========================
+
+CREATE TABLE roles (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ========================
+-- Permissions Table
+-- ========================
+
+CREATE TABLE permissions (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description VARCHAR(500),
+    resource VARCHAR(50),
+    action VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ========================
+-- User Roles Table
+-- ========================
+
+CREATE TABLE user_roles (
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+);
+
+-- ========================
+-- Role permissions Table
+-- ========================
+
+CREATE TABLE role_permissions (
+    role_id BIGINT NOT NULL,
+    permission_id BIGINT NOT NULL,
+    PRIMARY KEY (role_id, permission_id),
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+);
+
+-- ========================
 -- Payment Transaction Table
 -- ========================
 CREATE TABLE payment_transaction (
@@ -144,3 +208,53 @@ WHERE r.reservation_date BETWEEN from_date AND to_date
 GROUP BY group_name, r.reservation_date
 ORDER BY group_name, r.reservation_date;
 $$;
+
+-- ========================
+-- Add start items
+-- ========================
+
+-- Create basic permissions
+INSERT INTO permissions (name, description, resource, action) VALUES
+('USER_READ', 'Read user information', 'USER', 'READ'),
+('USER_CREATE', 'Create new users', 'USER', 'CREATE'),
+('USER_UPDATE', 'Update user information', 'USER', 'UPDATE'),
+('USER_DELETE', 'Delete users', 'USER', 'DELETE'),
+('ROLE_READ', 'Read role information', 'ROLE', 'READ'),
+('ROLE_MANAGE', 'Manage roles and permissions', 'ROLE', 'MANAGE'),
+('POST_READ', 'Read posts', 'POST', 'READ'),
+('POST_CREATE', 'Create posts', 'POST', 'CREATE'),
+('POST_UPDATE', 'Update posts', 'POST', 'UPDATE'),
+('POST_DELETE', 'Delete posts', 'POST', 'DELETE'),
+('POST_ADMIN', 'Full admin access to posts', 'POST', 'ADMIN');
+
+-- Create basic roles
+INSERT INTO roles (name, description) VALUES
+('ADMIN', 'Administrator with full access'),
+('MODERATOR', 'Moderator with limited admin access'),
+('USER', 'Regular user');
+
+-- Assign permissions to role: ADMIN
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'ADMIN';
+
+-- Assign permissions to role: MODERATOR
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r, permissions p
+WHERE r.name = 'MODERATOR'
+AND p.name IN ('USER_READ', 'POST_READ', 'POST_CREATE', 'POST_UPDATE', 'POST_ADMIN');
+
+-- Assign permissions to role: USER
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r, permissions p
+WHERE r.name = 'USER'
+AND p.name IN ('USER_READ', 'POST_READ');
+
+-- Create default admin user (password: admin123)
+-- Password hashed using bcrypt
+INSERT INTO users (username, email, password, first_name, last_name) VALUES
+('admin', 'admin@example.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iYqiSfFV5Z1.DfFSBnqh0xkOTLce', 'Admin', 'User');
+
+-- Assign ADMIN role to admin user
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.id, r.id FROM users u, roles r
+WHERE u.username = 'admin' AND r.name = 'ADMIN';

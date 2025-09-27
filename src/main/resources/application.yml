@@ -19,6 +19,14 @@ spring:
       max-file-size: 50MB
       max-request-size: 50MB
 
+jwt:
+  secret: mySecretKey12345678901234567890123456789012345678901234567890
+  expiration: 86400000 # 24 horas en milisegundos
+
+auth:
+  jwt:
+    enabled: true
+
 server:
   port: 8080
   servlet:
