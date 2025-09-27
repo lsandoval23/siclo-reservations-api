@@ -1,6 +1,6 @@
 package org.creati.sicloReservationsApi.auth.config;
 
-import org.creati.sicloReservationsApi.auth.service.CustomUserDetailsService;
+import org.creati.sicloReservationsApi.auth.service.impl.CustomUserDetailsService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

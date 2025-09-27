@@ -1,8 +1,6 @@
-package org.creati.sicloReservationsApi.auth.service;
+package org.creati.sicloReservationsApi.auth.service.impl;
 
-import org.creati.sicloReservationsApi.auth.dao.RoleRepository;
 import org.creati.sicloReservationsApi.auth.dao.UserRepository;
-import org.creati.sicloReservationsApi.auth.model.Role;
 import org.creati.sicloReservationsApi.auth.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,18 +10,15 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
 
-    public CustomUserDetailsService(UserRepository userRepository, RoleRepository roleRepository) {
+    public CustomUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -32,9 +27,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         Set<GrantedAuthority> authorities = new HashSet<>();
-        List<Role> userRoles = roleRepository.findRolesByUsername(user.getUsername());
-
-        userRoles.forEach(role -> {
+        user.getRoles().forEach(role -> {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
             role.getPermissions().forEach(permission ->
                     authorities.add(new SimpleGrantedAuthority(permission.getName()))

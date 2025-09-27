@@ -4,8 +4,6 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.creati.sicloReservationsApi.auth.dto.LoginRequest;
 import org.creati.sicloReservationsApi.auth.dto.LoginResponse;
-import org.creati.sicloReservationsApi.auth.dto.RegisterRequest;
-import org.creati.sicloReservationsApi.auth.model.User;
 import org.creati.sicloReservationsApi.auth.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,16 +32,5 @@ public class AuthController {
             return ResponseEntity.badRequest().build();
         }
     }
-
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
-        try {
-            User user = authService.register(registerRequest);
-            return ResponseEntity.ok().body("User registered successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
 
 }
