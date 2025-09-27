@@ -1,6 +1,7 @@
 package org.creati.sicloReservationsApi.auth.service.impl;
 
 import org.creati.sicloReservationsApi.auth.dao.UserRepository;
+import org.creati.sicloReservationsApi.auth.exception.InvalidCredentialsException;
 import org.creati.sicloReservationsApi.auth.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+                .orElseThrow(() -> new InvalidCredentialsException("User not found for username: " + username));
 
         Set<GrantedAuthority> authorities = new HashSet<>();
         user.getRoles().forEach(role -> {

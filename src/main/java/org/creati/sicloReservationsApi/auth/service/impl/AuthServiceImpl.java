@@ -1,21 +1,26 @@
 package org.creati.sicloReservationsApi.auth.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.creati.sicloReservationsApi.auth.dao.UserRepository;
 import org.creati.sicloReservationsApi.auth.dto.LoginRequest;
 import org.creati.sicloReservationsApi.auth.dto.LoginResponse;
-import org.creati.sicloReservationsApi.auth.dto.UserJwtInfo;
+import org.creati.sicloReservationsApi.auth.dto.UserDto;
+import org.creati.sicloReservationsApi.auth.exception.InvalidCredentialsException;
 import org.creati.sicloReservationsApi.auth.model.User;
 import org.creati.sicloReservationsApi.auth.service.AuthService;
 import org.creati.sicloReservationsApi.auth.service.JwtService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @Transactional
+@ConditionalOnProperty(name = "auth.jwt.enabled", havingValue = "true", matchIfMissing = true)
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
@@ -40,15 +45,15 @@ public class AuthServiceImpl implements AuthService {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
             User user = userRepository.findByUsername(loginRequest.getUsername())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
+                    .orElseThrow(() ->  new InvalidCredentialsException("User not found after authentication"));
             String jwtToken = jwtService.generateToken(user);
-            UserJwtInfo userInfo = new UserJwtInfo(user);
+            UserDto userInfo = new UserDto(user);
 
             return new LoginResponse(jwtToken, userInfo, jwtExpiration);
 
         } catch (AuthenticationException e) {
-            throw new RuntimeException("Invalid credentials", e);
+            log.error("Authentication failed for user: {}", loginRequest.getUsername(), e);
+            throw new InvalidCredentialsException("Error in authentication", e);
         }
     }
 }

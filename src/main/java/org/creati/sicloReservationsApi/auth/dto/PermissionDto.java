@@ -4,7 +4,7 @@ import lombok.Data;
 import org.creati.sicloReservationsApi.auth.model.Permission;
 
 @Data
-public class PermissionJwtInfo {
+public class PermissionDto {
 
     private Long id;
     private String name;
@@ -12,9 +12,9 @@ public class PermissionJwtInfo {
     private String resource;
     private String action;
 
-    public PermissionJwtInfo() {}
+    public PermissionDto() {}
 
-    public PermissionJwtInfo(Permission permission) {
+    public PermissionDto(Permission permission) {
         this.id = permission.getId();
         this.name = permission.getName();
         this.description = permission.getDescription();

@@ -7,11 +7,11 @@ public class LoginResponse {
 
     private String token;
     private String type = "Bearer";
-    private UserJwtInfo user;
+    private UserDto user;
     private Long expiresIn;
 
 
-    public LoginResponse(String token, UserJwtInfo user, Long expiresIn) {
+    public LoginResponse(String token, UserDto user, Long expiresIn) {
         this.token = token;
         this.user = user;
         this.expiresIn = expiresIn;

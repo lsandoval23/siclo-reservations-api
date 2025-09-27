@@ -7,21 +7,21 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Data
-public class RoleJwtInfo {
+public class RoleDto {
 
     private Long id;
     private String name;
     private String description;
-    private Set<PermissionJwtInfo> permissions;
+    private Set<PermissionDto> permissions;
 
-    public RoleJwtInfo() {}
+    public RoleDto() {}
 
-    public RoleJwtInfo(Role role) {
+    public RoleDto(Role role) {
         this.id = role.getId();
         this.name = role.getName();
         this.description = role.getDescription();
         this.permissions = role.getPermissions().stream()
-                .map(PermissionJwtInfo::new)
+                .map(PermissionDto::new)
                 .collect(Collectors.toSet());
     }
 }

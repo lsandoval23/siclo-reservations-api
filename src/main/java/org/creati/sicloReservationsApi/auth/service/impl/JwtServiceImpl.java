@@ -1,11 +1,14 @@
 package org.creati.sicloReservationsApi.auth.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import org.creati.sicloReservationsApi.auth.dto.UserJwtInfo;
+import lombok.extern.slf4j.Slf4j;
+import org.creati.sicloReservationsApi.auth.dto.UserDto;
+import org.creati.sicloReservationsApi.auth.exception.GenerationTokenException;
 import org.creati.sicloReservationsApi.auth.model.User;
 import org.creati.sicloReservationsApi.auth.service.JwtService;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +21,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class JwtServiceImpl implements JwtService {
 
@@ -63,11 +67,11 @@ public class JwtServiceImpl implements JwtService {
 
     }
 
-    public String generateToken(User user) {
+    public String generateToken(User user) throws GenerationTokenException {
         try {
             // Build dtos
             Map<String, Object> extraClaims = new HashMap<>();
-            UserJwtInfo userInfo = new UserJwtInfo(user);
+            UserDto userInfo = new UserDto(user);
             String userInfoJson = objectMapper.writeValueAsString(userInfo);
 
             // Set claims
@@ -87,8 +91,9 @@ public class JwtServiceImpl implements JwtService {
                     .signWith(signKey, SignatureAlgorithm.HS256)
                     .compact();
 
-        } catch (Exception e) {
-            throw new RuntimeException("Error generating JWT token", e);
+        } catch (JsonProcessingException e) {
+            log.error("Error serializing user info for JWT token", e);
+            throw new GenerationTokenException("Error generating token", e);
         }
     }
 
