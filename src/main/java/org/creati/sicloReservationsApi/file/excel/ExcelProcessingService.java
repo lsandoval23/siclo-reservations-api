@@ -45,10 +45,6 @@ public class ExcelProcessingService implements FileProcessingService {
     @Override
     @Transactional
     public void processPaymentTransactionsFile(MultipartFile fileData) {
-        log.info("Starting processing transaction file: {}", fileData.getOriginalFilename());
-        List<PaymentDto> paymentList = parser.parsePaymentsFromFile(fileData);
-        EntityCache cache =  entityCacheService.preloadEntitiesForPayments(paymentList);
-
 
     }
 

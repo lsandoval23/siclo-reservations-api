@@ -8,6 +8,11 @@ DROP TABLE IF EXISTS studio CASCADE;
 DROP TABLE IF EXISTS discipline CASCADE;
 DROP TABLE IF EXISTS instructor CASCADE;
 DROP TABLE IF EXISTS client CASCADE;
+DROP TABLE IF EXISTS user_roles CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS role_permissions CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
+DROP TABLE IF EXISTS permissions CASCADE;
 
 -- ========================
 -- Client Table
@@ -252,7 +257,7 @@ AND p.name IN ('USER_READ', 'POST_READ');
 -- Create default admin user (password: admin123)
 -- Password hashed using bcrypt
 INSERT INTO users (username, email, password, first_name, last_name) VALUES
-('admin', 'admin@example.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iYqiSfFV5Z1.DfFSBnqh0xkOTLce', 'Admin', 'User');
+('admin', 'admin@example.com', '$2b$12$Ldt7cLW42R2ngBe63ZhqJOUpULoTsd0rpl8tOhXU.0qP9x3HEfoLW', 'Admin', 'User');
 
 -- Assign ADMIN role to admin user
 INSERT INTO user_roles (user_id, role_id)

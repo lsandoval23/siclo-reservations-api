@@ -32,15 +32,4 @@ public class FileUploadController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping(
-            value = "/payments",
-            produces = "application/json",
-            consumes = "multipart/form-data"
-    )
-    public ResponseEntity<Void> processPayments(
-            @RequestPart ("file") MultipartFile fileContent
-    ) {
-        fileProcessingService.processPaymentTransactionsFile(fileContent);
-        return ResponseEntity.ok().build();
-    }
 }

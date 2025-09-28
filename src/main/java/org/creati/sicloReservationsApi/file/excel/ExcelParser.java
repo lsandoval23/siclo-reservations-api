@@ -34,61 +34,6 @@ import java.util.Objects;
 @Service
 public class ExcelParser {
 
-    public static final Map<String, String> REQUIRED_PAYMENT_COLUMNS = Map.ofEntries(
-            Map.entry("MONTH", "Mes"),
-            Map.entry("DAY", "dia"),
-            Map.entry("WEEK", "semana"),
-            Map.entry("PURCHASE_DATE", "Fecha de compra (date_created)"),
-            Map.entry("ACCREDITATION_DATE", "Fecha de acreditación (date_approved)"),
-            Map.entry("RELEASE_DATE", "Fecha de liberación del dinero (date_released)"),
-            Map.entry("COUNTERPART_EMAIL", "E-mail de la contraparte (counterpart_email)"),
-            Map.entry("COUNTERPART_PHONE", "Teléfono de la contraparte (counterpart_phone_number)"),
-            Map.entry("BUYER_DOCUMENT", "Documento de la contraparte (buyer_document)"),
-            Map.entry("OPERATION_TYPE", "Tipo de operación (operation_type)"),
-            Map.entry("PRODUCT_VALUE", "Valor del producto (transaction_amount)"),
-            Map.entry("TRANSACTION_FEE", "Tarifa de Mercado Pago (mercadopago_fee)"),
-            Map.entry("AMOUNT_RECEIVED", "Monto recibido (net_received_amount)"),
-            Map.entry("INSTALLMENTS", "Cuotas (installments)"),
-            Map.entry("PAYMENT_TYPE", "Medio de pago (payment_type)"),
-            Map.entry("PACKAGE", "paquete"),
-            Map.entry("CLASS_COUNT", "N° de clases")
-    );
-
-    public static final Map<String, String> OPTIONAL_PAYMENT_COLUMNS = Map.ofEntries(
-            Map.entry("EXTERNAL_REFERENCE", "Código de referencia (external_reference)"),
-            Map.entry("SELLER_CUSTOM_FIELD", "SKU Producto (seller_custom_field)"),
-            Map.entry("OPERATION_ID", "Número de operación de Mercado Pago (operation_id)"),
-            Map.entry("STATUS", "Estado de la operación (status)"),
-            Map.entry("STATUS_DETAIL", "Detalle del estado de la operación (status_detail)"),
-            Map.entry("MARKETPLACE_FEE", "Comisión por uso de plataforma de terceros (marketplace_fee)"),
-            Map.entry("SHIPPING_COST", "Costo de envío (shipping_cost)"),
-            Map.entry("COUPON_FEE", "Descuento a tu contraparte (coupon_fee)"),
-            Map.entry("AMOUNT_REFUNDED", "Monto devuelto (amount_refunded)"),
-            Map.entry("REFUND_OPERATOR", "Operador que devolvió dinero (refund_operator)"),
-            Map.entry("CLAIM_ID", "Número de reclamo (claim_id)"),
-            Map.entry("CHARGEBACK_ID", "Número de contracargo (chargeback_id)"),
-            Map.entry("MARKETPLACE", "Plataforma (marketplace)"),
-            Map.entry("ORDER_ID", "Número de venta en Mercado Libre (order_id)"),
-            Map.entry("MERCHANT_ORDER_ID", "Número de venta en tu negocio online (merchant_order_id)"),
-            Map.entry("CAMPAIGN_ID", "Número de campaña de descuento (campaign_id)"),
-            Map.entry("CAMPAIGN_NAME", "Nombre de campaña de descuento (campaign_name)"),
-            Map.entry("ACTIVITY_URL", "Detalle de la venta (activity_url)"),
-            Map.entry("ID", "Mercado Pago Point (id)"),
-            Map.entry("SHIPMENT_STATUS", "Estado del envío (shipment_status)"),
-            Map.entry("BUYER_ADDRESS", "Domicilio del comprador (buyer_address)"),
-            Map.entry("TRACKING_NUMBER", "Código de seguimiento (tracking_number)"),
-            Map.entry("OPERATOR_NAME", "Operador en cobros de Point (operator_name)"),
-            Map.entry("STORE_ID", "Número de local (store_id)"),
-            Map.entry("POS_ID", "Número de caja (pos_id)"),
-            Map.entry("EXTERNAL_ID", "Número de caja externo (external_id)"),
-            Map.entry("FINANCING_FEE", "Costos de financiación (financing_fee)"),
-            Map.entry("CLASS_COUNT2", "N° de clases2"),
-            Map.entry("OBSERVACIONES", "Obervaciones"),
-            Map.entry("REASON", "Descripción de la operación (reason)")
-    );
-
-    public static final String PAYMENTS_SHEET_NAME = "M-pago";
-
     private final ClientRepository clientRepository;
     private final StudioRepository studioRepository;
     private final RoomRepository roomRepository;
@@ -133,38 +78,6 @@ public class ExcelParser {
         return reservations;
     }
 
-    public List<PaymentDto> parsePaymentsFromFile(MultipartFile file) {
-        List<PaymentDto> payments = new ArrayList<>();
-        try (Workbook workbook = ExcelUtils.createWorkbook(file)){
-            Sheet sheet = workbook.getAllNames().stream()
-                    .filter(name -> PAYMENTS_SHEET_NAME.equalsIgnoreCase(name.getNameName()))
-                    .findFirst()
-                    .map(name -> workbook.getSheetAt(name.getSheetIndex()))
-                    .orElseThrow(() -> new RuntimeException("Payments sheet not found"));
-
-            if (validatePaymentHeaders(sheet.getRow(0))) {
-                throw new RuntimeException("Invalid Excel headers");
-            }
-
-            for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
-                Row row = sheet.getRow(rowIndex);
-                if (row == null || ExcelUtils.isEmptyRow(row)) continue;
-                try {
-                    PaymentDto dto = parsePaymentRow(row);
-                    log.info("Parsed Payment DTO: {} for index: {}", dto, rowIndex);
-                    payments.add(dto);
-                } catch (Exception e) {
-                    throw new RuntimeException("Error parsing row " + (rowIndex + 1), e);
-                }
-            }
-        } catch (IOException exception) {
-            throw new RuntimeException("Error reading Excel file: " + exception.getMessage(), exception);
-        }
-
-        return payments;
-    }
-
-
 
 
     private boolean validateReservationHeaders(Row headerRow) {
@@ -188,47 +101,6 @@ public class ExcelParser {
         return true;
     }
 
-    private boolean validatePaymentHeaders(Row headerRow) {
-        if (Objects.isNull(headerRow)) return false;
-        Map<Integer, String> foundColumns = new HashMap<>();
-
-        for (int i = 0; i < headerRow.getPhysicalNumberOfCells(); i++) {
-            Cell cell = headerRow.getCell(i);
-            if (cell != null) {
-                String columnName = ExcelUtils.getCellStringValue(cell).trim();
-                foundColumns.put(i, columnName);
-            }
-        }
-
-        log.info("Found columns: {}", foundColumns);
-
-        for (Map.Entry<String, String> entry : REQUIRED_PAYMENT_COLUMNS.entrySet()) {
-            String requiredColumnName = entry.getValue();
-            boolean found = foundColumns.values().stream()
-                    .anyMatch(col -> normalizeColumnName(col).equals(normalizeColumnName(requiredColumnName)));
-
-            if (!found) {
-                log.error("Missing required column: {} (normalized: {})",
-                        requiredColumnName, normalizeColumnName(requiredColumnName));
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private String normalizeColumnName(String columnName) {
-        if (columnName == null) return "";
-        return columnName.toLowerCase()
-                .trim()
-                .replaceAll("\\s+", " ")
-                .replaceAll("[áàâã]", "a")
-                .replaceAll("[éèê]", "e")
-                .replaceAll("[íìî]", "i")
-                .replaceAll("[óòôõ]", "o")
-                .replaceAll("[úùû]", "u")
-                .replaceAll("ñ", "n");
-    }
 
     private ReservationDto parseReservationRow(Row row) {
         ReservationDto dto = new ReservationDto();
@@ -247,69 +119,6 @@ public class ExcelParser {
         dto.setPaymentMethod(ExcelUtils.getCellStringValue(row.getCell(12)));
         dto.setStatus(ExcelUtils.getCellStringValue(row.getCell(13)));
         return dto;
-    }
-
-    private PaymentDto parsePaymentRow(Row row) {
-        try {
-            PaymentDto dto = new PaymentDto();
-            Map<String, Integer> columnIndices = getPaymentColumnIndices(row.getSheet().getRow(0));
-
-            dto.setMonth(ExcelUtils.getCellIntegerValueSafe(row, columnIndices.get("MONTH")));
-            dto.setDay(ExcelUtils.getCellIntegerValueSafe(row, columnIndices.get("DAY")));
-            dto.setWeek(ExcelUtils.getCellIntegerValueSafe(row, columnIndices.get("WEEK")));
-            dto.setPurchaseDate(ExcelUtils.getCellDateValueSafe(row, columnIndices.get("PURCHASE_DATE")));
-            dto.setAccreditationDate(ExcelUtils.getCellDateValueSafe(row, columnIndices.get("ACCREDITATION_DATE")));
-            dto.setReleaseDate(ExcelUtils.getCellDateValueSafe(row, columnIndices.get("RELEASE_DATE")));
-            dto.setClientEmail(ExcelUtils.getCellStringValueSafe(row, columnIndices.get("COUNTERPART_EMAIL")));
-            dto.setPhone(ExcelUtils.getCellStringValueSafe(row, columnIndices.get("COUNTERPART_PHONE")));
-            dto.setDocumentId(ExcelUtils.getCellStringValueSafe(row, columnIndices.get("BUYER_DOCUMENT")));
-            dto.setOperationType(ExcelUtils.getCellStringValueSafe(row, columnIndices.get("OPERATION_TYPE")));
-            dto.setProductValue(ExcelUtils.getCellBigDecimalValueSafe(row, columnIndices.get("PRODUCT_VALUE")));
-            dto.setTransactionFee(ExcelUtils.getCellBigDecimalValueSafe(row, columnIndices.get("TRANSACTION_FEE")));
-            dto.setAmountReceived(ExcelUtils.getCellBigDecimalValueSafe(row, columnIndices.get("AMOUNT_RECEIVED")));
-            dto.setInstallments(ExcelUtils.getCellIntegerValueSafe(row, columnIndices.get("INSTALLMENTS")));
-            dto.setPaymentMethod(ExcelUtils.getCellStringValueSafe(row, columnIndices.get("PAYMENT_TYPE")));
-            dto.setPackageName(ExcelUtils.getCellStringValueSafe(row, columnIndices.get("PACKAGE")));
-            dto.setClassCount(ExcelUtils.getCellIntegerValueSafe(row, columnIndices.get("CLASS_COUNT")));
-
-            return dto;
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error parsing payment row at index " + row.getRowNum(), e);
-        }
-    }
-
-    private Map<String, Integer> getPaymentColumnIndices(Row headerRow) {
-        Map<String, Integer> columnIndices = new HashMap<>();
-
-        if (headerRow == null) {
-            return columnIndices;
-        }
-
-        Map<String, String> allColumns = new HashMap<>();
-        allColumns.putAll(REQUIRED_PAYMENT_COLUMNS);
-        allColumns.putAll(OPTIONAL_PAYMENT_COLUMNS);
-
-        for (Map.Entry<String, String> entry : allColumns.entrySet()) {
-            String key = entry.getKey();
-            String expectedColumnName = entry.getValue();
-
-            for (int i = 0; i < headerRow.getPhysicalNumberOfCells(); i++) {
-                Cell cell = headerRow.getCell(i);
-                if (cell != null) {
-                    String actualColumnName = ExcelUtils.getCellStringValue(cell).trim();
-
-                    if (normalizeColumnName(actualColumnName).equals(normalizeColumnName(expectedColumnName))) {
-                        columnIndices.put(key, i);
-                        log.info("Mapped column '{}' to index {}", key, i);
-                        break;
-                    }
-                }
-            }
-        }
-
-        log.info("Final column indices mapping: {}", columnIndices);
-        return columnIndices;
     }
 
 

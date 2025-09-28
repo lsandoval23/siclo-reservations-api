@@ -60,29 +60,6 @@ public class ExcelUtils {
         return true;
     }
 
-    public static String getCellStringValueSafe(Row row, Integer columnIndex) {
-        if (columnIndex == null || row == null) return null;
-        Cell cell = row.getCell(columnIndex);
-        return getCellStringValue(cell);
-    }
-
-    public static Integer getCellIntegerValueSafe(Row row, Integer columnIndex) {
-        if (columnIndex == null || row == null) return null;
-        Cell cell = row.getCell(columnIndex);
-        return getCellIntegerValue(cell);
-    }
-
-    public static BigDecimal getCellBigDecimalValueSafe(Row row, Integer columnIndex) {
-        if (columnIndex == null || row == null) return null;
-        Cell cell = row.getCell(columnIndex);
-        return getCellBigDecimalValue(cell);
-    }
-
-    public static LocalDate getCellDateValueSafe(Row row, Integer columnIndex) {
-        if (columnIndex == null || row == null) return null;
-        Cell cell = row.getCell(columnIndex);
-        return getCellDateValue(cell);
-    }
 
     public static String getCellStringValue(Cell cell) {
         if (cell == null) return "";
