@@ -1,4 +1,4 @@
-package org.creati.sicloReservationsApi.file;
+package org.creati.sicloReservationsApi.service;
 
 import org.springframework.web.multipart.MultipartFile;
 

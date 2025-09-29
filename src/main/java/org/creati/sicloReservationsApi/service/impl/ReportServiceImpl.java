@@ -1,15 +1,13 @@
-package org.creati.sicloReservationsApi.service;
+package org.creati.sicloReservationsApi.service.impl;
 
 import org.creati.sicloReservationsApi.dao.postgre.ReservationRepository;
 import org.creati.sicloReservationsApi.dao.postgre.dto.ReservationReportProjection;
+import org.creati.sicloReservationsApi.service.ReportService;
 import org.creati.sicloReservationsApi.service.model.ReservationReportDto;
 import org.creati.sicloReservationsApi.service.model.ReservationSeriesDto;
 import org.springframework.stereotype.Service;
 
-import java.sql.Date;
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

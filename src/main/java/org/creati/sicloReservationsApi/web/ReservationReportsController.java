@@ -1,7 +1,7 @@
 package org.creati.sicloReservationsApi.web;
 
 import org.creati.sicloReservationsApi.service.ReportService;
-import org.creati.sicloReservationsApi.service.ReportServiceImpl;
+import org.creati.sicloReservationsApi.service.impl.ReportServiceImpl;
 import org.creati.sicloReservationsApi.service.model.ReservationReportDto;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;

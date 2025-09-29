@@ -1,7 +1,8 @@
 package org.creati.sicloReservationsApi.web;
 
 
-import org.creati.sicloReservationsApi.file.FileProcessingService;
+import org.creati.sicloReservationsApi.service.FileProcessingService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,12 +20,9 @@ public class FileUploadController {
         this.fileProcessingService = fileProcessingService;
     }
 
-
-    @PostMapping(
-            value = "/reservations",
-            produces = "application/json",
-            consumes = "multipart/form-data"
-    )
+    @PostMapping(value = "/reservations",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> process(
             @RequestPart ("file") MultipartFile fileContent
     ) {
