@@ -6,7 +6,9 @@ import org.creati.sicloReservationsApi.service.ReportService;
 import org.creati.sicloReservationsApi.service.model.PagedResponse;
 import org.creati.sicloReservationsApi.service.model.ReservationReportDto;
 import org.creati.sicloReservationsApi.service.model.ReservationSeriesDto;
+import org.creati.sicloReservationsApi.service.model.ReservationSortField;
 import org.creati.sicloReservationsApi.service.model.ReservationTableDto;
+import org.creati.sicloReservationsApi.service.model.SortDirection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,9 +30,10 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public ReservationReportDto getGroupedReport(String groupBy, LocalDate from, LocalDate to, String timeUnit) {
+    public ReservationReportDto getGroupedReport(ReservationReportDto.GroupBy groupBy, LocalDate from, LocalDate to, String timeUnit) {
 
-        List<ReservationReportProjection> rows = reservationRepository.getReservationsReportByDay(groupBy, from, to);
+        // TODO Add timeUnit handling (week, month, etc.)
+        List<ReservationReportProjection> rows = reservationRepository.getReservationsReportByDay(groupBy.getFieldName(), from, to);
         Map<String, List<ReservationReportProjection>> grouped = rows.stream()
                 .collect(Collectors.groupingBy(ReservationReportProjection::getGroupName));
         List<LocalDate> allDates = from.datesUntil(to.plusDays(1)).toList();
@@ -62,9 +65,9 @@ public class ReportServiceImpl implements ReportService {
     public PagedResponse<ReservationTableDto> getReservationTable(
             LocalDate from, LocalDate to,
             int page, int size,
-            String sortBy, String sortDir) {
+            ReservationSortField sortBy, SortDirection sortDir) {
 
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir.getValue()), sortBy.getFieldName());
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<ReservationTableDto> pageResponse = reservationRepository.getReservationTable(pageable);
 
