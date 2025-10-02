@@ -3,8 +3,14 @@ package org.creati.sicloReservationsApi.service.impl;
 import org.creati.sicloReservationsApi.dao.postgre.ReservationRepository;
 import org.creati.sicloReservationsApi.dao.postgre.dto.ReservationReportProjection;
 import org.creati.sicloReservationsApi.service.ReportService;
+import org.creati.sicloReservationsApi.service.model.PagedResponse;
 import org.creati.sicloReservationsApi.service.model.ReservationReportDto;
 import org.creati.sicloReservationsApi.service.model.ReservationSeriesDto;
+import org.creati.sicloReservationsApi.service.model.ReservationTableDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -51,4 +57,25 @@ public class ReportServiceImpl implements ReportService {
                 series
         );
     }
+
+    @Override
+    public PagedResponse<ReservationTableDto> getReservationTable(
+            LocalDate from, LocalDate to,
+            int page, int size,
+            String sortBy, String sortDir) {
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<ReservationTableDto> pageResponse = reservationRepository.getReservationTable(pageable);
+
+        return new PagedResponse<>(
+                pageResponse.getContent(),
+                pageResponse.getNumber(),
+                pageResponse.getSize(),
+                pageResponse.getTotalElements(),
+                pageResponse.getTotalPages(),
+                pageResponse.isLast()
+        );
+    }
+
 }
