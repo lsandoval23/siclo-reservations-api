@@ -13,6 +13,7 @@ DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS role_permissions CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS permissions CASCADE;
+DROP TABLE IF EXISTS file_processing_job CASCADE;
 
 -- ========================
 -- Client Table
@@ -173,6 +174,27 @@ CREATE TABLE payment_transaction (
     created_at         TIMESTAMP DEFAULT now(),
     CONSTRAINT fk_payment_client FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE
 );
+
+-- ========================
+-- Process file audit Table
+-- ========================
+
+CREATE TABLE file_processing_job (
+    job_id            BIGSERIAL PRIMARY KEY,
+    file_name         VARCHAR(255) NOT NULL,
+    file_extension    VARCHAR(20),
+    status            VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    created_at        TIMESTAMP DEFAULT NOW(),
+    updated_at        TIMESTAMP,
+    finished_at       TIMESTAMP,
+    total_records     INT,
+    processed_records INT,
+    skipped_records   INT,
+    error_records 	  INT,
+    processing_result TEXT
+);
+
+CREATE INDEX idx_file_processing_status ON file_processing_job(status);
 
 -- ========================
 -- Indexes

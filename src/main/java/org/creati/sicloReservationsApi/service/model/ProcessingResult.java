@@ -12,15 +12,12 @@ import java.util.List;
 public class ProcessingResult {
 
     private boolean success;
-    private String message;
     private int totalRows;
     private int processedRows;
     private int errorRows;
+    private int skippedRows;
 
     @Builder.Default
     private List<String> errors = new ArrayList<>();
-
-    @Builder.Default
-    private List<String> warnings = new ArrayList<>();
 
 }

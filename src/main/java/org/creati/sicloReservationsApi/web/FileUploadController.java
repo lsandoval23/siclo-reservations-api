@@ -3,7 +3,10 @@ package org.creati.sicloReservationsApi.web;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
+import org.creati.sicloReservationsApi.dao.postgre.model.FileJob;
+import org.creati.sicloReservationsApi.service.FileJobService;
 import org.creati.sicloReservationsApi.service.FileProcessingService;
+import org.creati.sicloReservationsApi.service.model.FileJobCreateRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,9 +29,13 @@ import java.util.UUID;
 public class FileUploadController {
 
     private final FileProcessingService fileProcessingService;
+    private final FileJobService fileJobService;
 
-    public FileUploadController(FileProcessingService fileProcessingService) {
+    public FileUploadController(
+            final FileProcessingService fileProcessingService,
+            final FileJobService fileJobService) {
         this.fileProcessingService = fileProcessingService;
+        this.fileJobService = fileJobService;
     }
 
     @PostMapping(value = "/reservations",
@@ -45,11 +53,18 @@ public class FileUploadController {
                     String.format("%s-%s", FilenameUtils.getBaseName(filename), UUID.randomUUID()),
                     "." + FilenameUtils.getExtension(filename).toLowerCase());
             fileContent.transferTo(tempFilePath);
+            File tempFile = tempFilePath.toFile();
+
+            // Start job tracking in DB
+            FileJob createdJob = fileJobService.createFileJob(FileJobCreateRequest.builder()
+                    .fileName(tempFile.getName())
+                    .fileExtension(FilenameUtils.getExtension(filename).toLowerCase())
+                    .build());
 
             // Process the file asynchronously
-            fileProcessingService.processReservationsFile(tempFilePath.toFile());
+            fileProcessingService.processReservationsFile(tempFile, createdJob.getJobId());
 
-            return ResponseEntity.accepted().body("File request accepted for processing");
+            return ResponseEntity.accepted().body("File request accepted for processing with Job ID: " + createdJob.getJobId());
         } catch (IOException e) {
             log.error("Error processing uploaded file", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

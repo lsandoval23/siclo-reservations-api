@@ -51,19 +51,21 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
 
 
     @Override
-    public void persistReservationsBatch(List<ReservationDto> reservationDtoList, EntityCache cache) {
+    public ProcessingResult persistReservationsBatch(List<ReservationDto> reservationDtoList, EntityCache cache) {
 
         List<String> errors = new ArrayList<>();
         List<Reservation> reservationsToSave = new ArrayList<>();
 
         int processedRows = 0;
         int errorRows = 0;
+        int skippedRows = 0;
 
-        for (int i = 1; i < reservationDtoList.size(); i++) {
+        for (int i = 0; i < reservationDtoList.size(); i++) {
             ReservationDto reservation = reservationDtoList.get(i);
             try {
-                if (cache.getExistingReservationIds().contains(reservation.getReservationId())){
+                if (cache.getExistingReservationIds().contains(reservation.getReservationId())) {
                     log.warn("Skipping existing reservation ID: {}", reservation.getReservationId());
+                    skippedRows++;
                     continue;
                 }
                 Reservation reservationEntity = buildReservationEntity(reservation, cache);
@@ -81,16 +83,15 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
             log.info("Saved {} new reservations", reservationsToSave.size());
         }
 
-        ProcessingResult result = ProcessingResult.builder()
+        return ProcessingResult.builder()
                 .success(errorRows == 0)
-                .message(String.format("Processed %d rows with %d errors", processedRows, errorRows))
                 .totalRows(reservationDtoList.size())
                 .processedRows(processedRows)
                 .errorRows(errorRows)
+                .skippedRows(skippedRows)
                 .errors(errors)
                 .build();
 
-        // TODO Save result in db to serve as audit reports
     }
 
     @Override

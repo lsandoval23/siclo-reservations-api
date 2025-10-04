@@ -5,6 +5,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.creati.sicloReservationsApi.exception.FileProcessingException;
 import org.creati.sicloReservationsApi.service.excel.util.ExcelUtils;
 import org.creati.sicloReservationsApi.service.model.ReservationDto;
 import org.springframework.stereotype.Service;
@@ -19,12 +20,14 @@ import java.util.List;
 public class ExcelParser {
 
     // Method to parse reservations from the uploaded Excel file, generates DTO's only
-    public List<ReservationDto> parseReservationsFromFile(File file) {
+    public List<ReservationDto> parseReservationsFromFile(File file) throws IOException, FileProcessingException {
+
         List<ReservationDto> reservations = new ArrayList<>();
+
         try (Workbook workbook = ExcelUtils.createWorkbook(file)){
             Sheet sheet = workbook.getSheetAt(0);
             if (validateReservationHeaders(sheet.getRow(0))) {
-                throw new RuntimeException("Invalid Excel headers");
+                throw new FileProcessingException("Invalid Excel headers");
             }
 
             for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
@@ -35,11 +38,9 @@ public class ExcelParser {
                     log.info("Parsed Reservation DTO: {} for index: {}", dto, rowIndex);
                     reservations.add(dto);
                 } catch (Exception e) {
-                    throw new RuntimeException("Error parsing row " + (rowIndex + 1), e);
+                    throw new FileProcessingException("Error parsing row " + (rowIndex + 1), e);
                 }
             }
-        } catch (IOException exception) {
-            throw new RuntimeException("Error reading Excel file: " + exception.getMessage(), exception);
         }
 
         return reservations;

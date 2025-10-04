@@ -6,7 +6,7 @@ import java.io.File;
 
 public interface FileProcessingService {
 
-    void processReservationsFile(File fileData);
-    void processPaymentTransactionsFile(MultipartFile fileData);
+    void processReservationsFile(File fileData, Long jobId);
+    void processPaymentTransactionsFile(File fileData);
 
 }
