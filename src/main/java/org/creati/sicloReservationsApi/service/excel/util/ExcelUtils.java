@@ -8,8 +8,9 @@ import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -37,15 +38,15 @@ public class ExcelUtils {
             DateTimeFormatter.ISO_LOCAL_TIME
     );
 
-    public static Workbook createWorkbook(MultipartFile multipartFile) throws IOException {
+    public static Workbook createWorkbook(File file) throws IOException {
 
-        String filename = Optional.ofNullable(multipartFile.getOriginalFilename())
+        String filename = Optional.of(file.getName())
                 .orElseThrow(() -> new IllegalArgumentException("Filename is null"));
         String extension = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
 
         return switch (extension) {
-            case "xlsx" -> new XSSFWorkbook(multipartFile.getInputStream());
-            case "xls"  -> new HSSFWorkbook(multipartFile.getInputStream());
+            case "xlsx" -> new XSSFWorkbook(new FileInputStream(file));
+            case "xls"  -> new HSSFWorkbook(new FileInputStream(file));
             default     -> throw new IllegalArgumentException("The provided file is not a valid Excel file: " + extension);
         };
     }

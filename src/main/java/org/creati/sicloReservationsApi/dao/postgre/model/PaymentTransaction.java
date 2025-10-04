@@ -10,7 +10,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,6 +21,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "payment_transaction")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class PaymentTransaction {
 
     @Id

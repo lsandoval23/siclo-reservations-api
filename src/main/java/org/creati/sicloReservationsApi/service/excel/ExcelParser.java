@@ -8,8 +8,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.creati.sicloReservationsApi.service.excel.util.ExcelUtils;
 import org.creati.sicloReservationsApi.service.model.ReservationDto;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.List;
 public class ExcelParser {
 
     // Method to parse reservations from the uploaded Excel file, generates DTO's only
-    public List<ReservationDto> parseReservationsFromFile(MultipartFile file) {
+    public List<ReservationDto> parseReservationsFromFile(File file) {
         List<ReservationDto> reservations = new ArrayList<>();
         try (Workbook workbook = ExcelUtils.createWorkbook(file)){
             Sheet sheet = workbook.getSheetAt(0);

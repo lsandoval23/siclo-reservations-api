@@ -9,8 +9,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -18,6 +20,8 @@ import java.util.List;
 @Table(name = "discipline")
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Discipline {
 
     @Id

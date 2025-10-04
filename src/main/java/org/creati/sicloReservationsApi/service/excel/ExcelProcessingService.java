@@ -6,10 +6,12 @@ import org.creati.sicloReservationsApi.cache.model.EntityCache;
 import org.creati.sicloReservationsApi.service.FileProcessingService;
 import org.creati.sicloReservationsApi.service.model.ReservationDto;
 import org.creati.sicloReservationsApi.service.BatchPersistenceService;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.List;
 
 @Slf4j
@@ -32,9 +34,10 @@ public class ExcelProcessingService implements FileProcessingService {
 
 
     @Override
+    @Async
     @Transactional
-    public void processReservationsFile(MultipartFile fileData) {
-        log.info("Starting processing reservation file: {}", fileData.getOriginalFilename());
+    public void processReservationsFile(File fileData) {
+        log.info("Starting processing reservation file: {}", fileData.getName());
         List<ReservationDto> reservationList = parser.parseReservationsFromFile(fileData);
         EntityCache cache = entityCacheService.preloadEntitiesForReservation(reservationList);
         batchPersistenceService.persistReservationsBatch(reservationList, cache);
