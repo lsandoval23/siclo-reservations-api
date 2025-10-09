@@ -50,9 +50,6 @@ public class Role {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @ManyToMany(mappedBy = "roles")
-    private Set<User> users;
-
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "role_permissions",
@@ -77,6 +74,14 @@ public class Role {
                                 .map(Permission::toDto)
                                 .collect(Collectors.toSet()))
                         .orElse(null))
+                .build();
+    }
+
+    public RoleDto toDtoWithoutPermissions() {
+        return RoleDto.builder()
+                .id(this.id)
+                .name(this.name)
+                .description(this.description)
                 .build();
     }
 

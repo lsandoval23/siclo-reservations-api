@@ -26,7 +26,7 @@ public class PermissionController {
 
     private final PermissionService permissionService;
 
-    public PermissionController(PermissionService permissionService) {
+    public PermissionController(final PermissionService permissionService) {
         this.permissionService = permissionService;
     }
 

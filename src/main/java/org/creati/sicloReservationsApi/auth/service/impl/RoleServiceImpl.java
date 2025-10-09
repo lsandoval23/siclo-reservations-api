@@ -11,6 +11,7 @@ import org.creati.sicloReservationsApi.auth.service.RoleService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,10 +55,15 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public List<RoleDto> getAllRoles() {
-        return roleRepository.findAll().stream()
-                .map(Role::toDto)
-                .collect(Collectors.toList());
+    public List<RoleDto> getAllRoles(String iod) {
+        return Optional.ofNullable(iod)
+                .filter(param -> param.equals("permissions"))
+                .map(param -> roleRepository.findAll().stream()
+                        .map(Role::toDto)
+                        .toList())
+                .orElse(roleRepository.findAll().stream()
+                        .map(Role::toDtoWithoutPermissions)
+                        .toList());
     }
 
     @Override
@@ -72,9 +78,11 @@ public class RoleServiceImpl implements RoleService {
         Role modifiedRole = existingRole.toBuilder()
                 .name(roleDto.getName())
                 .description(roleDto.getDescription())
-                .permissions(roleDto.getPermissions().stream()
-                        .map(Permission::fromDto)
-                        .collect(Collectors.toSet()))
+                .permissions(Optional.ofNullable(roleDto.getPermissions())
+                        .map(permissionList -> permissionList.stream()
+                                .map(Permission::fromDto)
+                                .collect(Collectors.toSet()))
+                        .orElse(null))
                 .build();
 
         Role updatedRole = roleRepository.save(modifiedRole);

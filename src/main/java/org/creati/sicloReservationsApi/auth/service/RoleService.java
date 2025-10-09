@@ -11,7 +11,7 @@ public interface RoleService {
     RoleDto createRole(RoleDto roleDto);
     RoleDto getRoleById(Long id);
     RoleDto getRoleByName(String name);
-    List<RoleDto> getAllRoles();
+    List<RoleDto> getAllRoles(String iod);
     RoleDto updateRole(Long id, RoleDto roleDto);
     void deleteRole(Long id);
 

@@ -10,6 +10,7 @@ import org.creati.sicloReservationsApi.service.model.ReservationTableDto;
 import org.creati.sicloReservationsApi.service.model.SortDirection;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import java.time.LocalDate;
 
 @Validated
 @RestController
+@PreAuthorize("hasAuthority('REPORT_VIEW')")
 @RequestMapping("/reports/reservations")
 public class ReservationReportsController {
 

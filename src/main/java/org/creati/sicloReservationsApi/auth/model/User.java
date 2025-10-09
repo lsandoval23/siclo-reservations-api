@@ -108,6 +108,17 @@ public class User {
                 .build();
     }
 
+    public UserDto toDtoWithoutRoles() {
+        return UserDto.builder()
+                .id(this.getId())
+                .username(this.getUsername())
+                .email(this.getEmail())
+                .firstName(this.getFirstName())
+                .lastName(this.getLastName())
+                .isActive(this.isActive)
+                .build();
+    }
+
 
     public static User fromDto(UserDto dto, PasswordEncoder passwordEncoder) {
         return User.builder()
