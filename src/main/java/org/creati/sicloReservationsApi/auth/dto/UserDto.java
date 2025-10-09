@@ -1,22 +1,29 @@
 package org.creati.sicloReservationsApi.auth.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.creati.sicloReservationsApi.auth.model.User;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder(toBuilder = true)
 public class UserDto {
 
     private Long id;
     private String username;
+    private String password;
     private String email;
     private String firstName;
     private String lastName;
     private Set<RoleDto> roles;
+    private Boolean isActive;
 
-    public UserDto() {}
 
     public UserDto(User user) {
         this.id = user.getId();

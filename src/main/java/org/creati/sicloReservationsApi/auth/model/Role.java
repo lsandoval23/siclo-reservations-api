@@ -18,14 +18,17 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.creati.sicloReservationsApi.auth.dto.RoleDto;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -63,4 +66,33 @@ public class Role {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    public RoleDto toDto() {
+        return RoleDto.builder()
+                .id(this.id)
+                .name(this.name)
+                .description(this.description)
+                .permissions(Optional.ofNullable(this.permissions)
+                        .map(permissionSet -> permissionSet.stream()
+                                .map(Permission::toDto)
+                                .collect(Collectors.toSet()))
+                        .orElse(null))
+                .build();
+    }
+
+    public static Role fromDto(RoleDto dto) {
+        return Role.builder()
+                .id(dto.getId())
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .permissions(Optional.ofNullable(dto.getPermissions())
+                        .map(permissionDtoSet -> permissionDtoSet.stream()
+                                .map(Permission::fromDto)
+                                .collect(Collectors.toSet()))
+                        .orElse(null))
+                .build();
+    }
+
+
+
 }

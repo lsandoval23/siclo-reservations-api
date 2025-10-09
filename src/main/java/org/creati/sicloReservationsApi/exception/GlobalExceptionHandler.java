@@ -4,13 +4,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.creati.sicloReservationsApi.auth.dto.ErrorResponse;
+import org.creati.sicloReservationsApi.auth.exception.DuplicateResourceException;
 import org.creati.sicloReservationsApi.auth.exception.GenerationTokenException;
 import org.creati.sicloReservationsApi.auth.exception.InvalidCredentialsException;
+import org.creati.sicloReservationsApi.auth.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 
@@ -44,6 +46,45 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAuthorizationDenied(AuthorizationDeniedException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ErrorResponse.builder()
+                .code("AUTHORIZATION_DENIED")
+                .message("You do not have permission to access this resource")
+                .path(request.getRequestURI())
+                .timestamp(Instant.now())
+                .build());
+
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(
+            ResourceNotFoundException ex, HttpServletRequest request) {
+
+        ErrorResponse error = ErrorResponse.builder()
+                .code("RESOURCE_NOT_FOUND")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .timestamp(Instant.now())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateResource(
+            DuplicateResourceException ex, HttpServletRequest request) {
+
+        ErrorResponse error = ErrorResponse.builder()
+                .code("DUPLICATE_RESOURCE")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .timestamp(Instant.now())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(Exception.class)

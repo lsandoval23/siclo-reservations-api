@@ -1,9 +1,15 @@
 package org.creati.sicloReservationsApi.auth.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.creati.sicloReservationsApi.auth.model.Permission;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder(toBuilder = true)
 public class PermissionDto {
 
     private Long id;
@@ -11,8 +17,6 @@ public class PermissionDto {
     private String description;
     private String resource;
     private String action;
-
-    public PermissionDto() {}
 
     public PermissionDto(Permission permission) {
         this.id = permission.getId();

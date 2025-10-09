@@ -88,6 +88,50 @@ CREATE TABLE reservation (
 );
 
 -- ========================
+-- Payment Transaction Table
+-- ========================
+CREATE TABLE payment_transaction (
+    transaction_id     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    client_id          BIGINT NOT NULL,
+    month              INT,
+    day                INT,
+    week               INT,
+    purchase_date      DATE,
+    accreditation_date DATE,
+    release_date       DATE,
+    operation_type     VARCHAR(100),
+    product_value      NUMERIC(12,2),
+    transaction_fee    NUMERIC(12,2),
+    amount_received    NUMERIC(12,2),
+    installments       INT,
+    payment_method     VARCHAR(100),
+    package            VARCHAR(100),
+    class_count        INT,
+    created_at         TIMESTAMP DEFAULT now(),
+    CONSTRAINT fk_payment_client FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE
+);
+
+-- ========================
+-- Process file audit Table
+-- ========================
+
+CREATE TABLE file_processing_job (
+    job_id            BIGSERIAL PRIMARY KEY,
+    file_name         VARCHAR(255) NOT NULL,
+    file_extension    VARCHAR(20),
+    status            VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    created_at        TIMESTAMP DEFAULT NOW(),
+    updated_at        TIMESTAMP,
+    finished_at       TIMESTAMP,
+    total_records     INT,
+    processed_records INT,
+    skipped_records   INT,
+    error_records 	  INT,
+    processing_result TEXT
+);
+CREATE INDEX idx_file_processing_status ON file_processing_job(status);
+
+-- ========================
 -- User Table
 -- ========================
 
@@ -151,50 +195,6 @@ CREATE TABLE role_permissions (
     FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
 );
 
--- ========================
--- Payment Transaction Table
--- ========================
-CREATE TABLE payment_transaction (
-    transaction_id     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    client_id          BIGINT NOT NULL,
-    month              INT,
-    day                INT,
-    week               INT,
-    purchase_date      DATE,
-    accreditation_date DATE,
-    release_date       DATE,
-    operation_type     VARCHAR(100),
-    product_value      NUMERIC(12,2),
-    transaction_fee    NUMERIC(12,2),
-    amount_received    NUMERIC(12,2),
-    installments       INT,
-    payment_method     VARCHAR(100),
-    package            VARCHAR(100),
-    class_count        INT,
-    created_at         TIMESTAMP DEFAULT now(),
-    CONSTRAINT fk_payment_client FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE
-);
-
--- ========================
--- Process file audit Table
--- ========================
-
-CREATE TABLE file_processing_job (
-    job_id            BIGSERIAL PRIMARY KEY,
-    file_name         VARCHAR(255) NOT NULL,
-    file_extension    VARCHAR(20),
-    status            VARCHAR(50) NOT NULL DEFAULT 'PENDING',
-    created_at        TIMESTAMP DEFAULT NOW(),
-    updated_at        TIMESTAMP,
-    finished_at       TIMESTAMP,
-    total_records     INT,
-    processed_records INT,
-    skipped_records   INT,
-    error_records 	  INT,
-    processing_result TEXT
-);
-
-CREATE INDEX idx_file_processing_status ON file_processing_job(status);
 
 -- ========================
 -- Indexes
@@ -242,39 +242,26 @@ $$;
 
 -- Create basic permissions
 INSERT INTO permissions (name, description, resource, action) VALUES
-('USER_READ', 'Read user information', 'USER', 'READ'),
-('USER_CREATE', 'Create new users', 'USER', 'CREATE'),
-('USER_UPDATE', 'Update user information', 'USER', 'UPDATE'),
-('USER_DELETE', 'Delete users', 'USER', 'DELETE'),
-('ROLE_READ', 'Read role information', 'ROLE', 'READ'),
-('ROLE_MANAGE', 'Manage roles and permissions', 'ROLE', 'MANAGE'),
-('POST_READ', 'Read posts', 'POST', 'READ'),
-('POST_CREATE', 'Create posts', 'POST', 'CREATE'),
-('POST_UPDATE', 'Update posts', 'POST', 'UPDATE'),
-('POST_DELETE', 'Delete posts', 'POST', 'DELETE'),
-('POST_ADMIN', 'Full admin access to posts', 'POST', 'ADMIN');
+('MANAGE_USER', 'Can create, update, delete and view users', 'user', 'manage'),
+('MANAGE_ROLES', 'Can manage roles', 'role', 'manage'),
+('MANAGE_PERMISSIONS', 'Can manage permissions', 'permission', 'manage'),
+('FILE_UPLOAD', 'Can upload data files', 'file', 'upload'),
+('REPORT_VIEW', 'Can view reports', 'report', 'view');
 
 -- Create basic roles
 INSERT INTO roles (name, description) VALUES
 ('ADMIN', 'Administrator with full access'),
-('MODERATOR', 'Moderator with limited admin access'),
-('USER', 'Regular user');
+('USER', 'Standard user with limited access');
 
 -- Assign permissions to role: ADMIN
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'ADMIN';
 
--- Assign permissions to role: MODERATOR
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r, permissions p
-WHERE r.name = 'MODERATOR'
-AND p.name IN ('USER_READ', 'POST_READ', 'POST_CREATE', 'POST_UPDATE', 'POST_ADMIN');
-
 -- Assign permissions to role: USER
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r, permissions p
 WHERE r.name = 'USER'
-AND p.name IN ('USER_READ', 'POST_READ');
+AND p.name IN ('FILE_UPLOAD', 'REPORT_VIEW');
 
 -- Create default admin user (password: admin123)
 -- Password hashed using bcrypt

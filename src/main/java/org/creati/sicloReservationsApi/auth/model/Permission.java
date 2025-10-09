@@ -15,6 +15,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.creati.sicloReservationsApi.auth.dto.PermissionDto;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -22,7 +23,7 @@ import java.util.Set;
 
 @Getter
 @Setter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -55,4 +56,25 @@ public class Permission {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    public PermissionDto toDto() {
+        return PermissionDto.builder()
+                .id(this.getId())
+                .name(this.getName())
+                .description(this.getDescription())
+                .resource(this.getResource())
+                .action(this.getAction())
+                .build();
+    }
+
+    public static Permission fromDto(PermissionDto dto) {
+        return Permission.builder()
+                .id(dto.getId())
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .resource(dto.getResource())
+                .action(dto.getAction())
+                .build();
+    }
+
 }

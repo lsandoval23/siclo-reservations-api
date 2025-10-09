@@ -19,19 +19,22 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.creati.sicloReservationsApi.auth.dto.UserDto;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
 @Setter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -88,5 +91,40 @@ public class User {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    public UserDto toDto() {
+        return UserDto.builder()
+                .id(this.getId())
+                .username(this.getUsername())
+                .email(this.getEmail())
+                .firstName(this.getFirstName())
+                .lastName(this.getLastName())
+                .roles(Optional.ofNullable(this.getRoles())
+                        .map(roleList -> roleList.stream()
+                                .map(Role::toDto)
+                                .collect(Collectors.toSet()))
+                        .orElse(null))
+                .isActive(this.isActive)
+                .build();
+    }
+
+
+    public static User fromDto(UserDto dto, PasswordEncoder passwordEncoder) {
+        return User.builder()
+                .id(dto.getId())
+                .username(dto.getUsername())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .email(dto.getEmail())
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .roles(Optional.ofNullable(dto.getRoles())
+                        .map(roleDtoSet -> roleDtoSet.stream()
+                                .map(Role::fromDto)
+                                .collect(Collectors.toSet()))
+                        .orElse(null))
+                .isActive(dto.getIsActive())
+                .build();
+    }
+
 
 }

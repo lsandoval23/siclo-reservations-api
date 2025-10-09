@@ -1,20 +1,24 @@
 package org.creati.sicloReservationsApi.auth.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.creati.sicloReservationsApi.auth.model.Role;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder(toBuilder = true)
 public class RoleDto {
 
     private Long id;
     private String name;
     private String description;
     private Set<PermissionDto> permissions;
-
-    public RoleDto() {}
 
     public RoleDto(Role role) {
         this.id = role.getId();
