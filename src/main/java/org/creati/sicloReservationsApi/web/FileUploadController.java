@@ -43,7 +43,7 @@ public class FileUploadController {
     @PostMapping(value = "/reservations",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> process(
+    public ResponseEntity<String> processReservation(
             @RequestPart ("file") MultipartFile fileContent
     ) {
         try {
@@ -65,6 +65,40 @@ public class FileUploadController {
 
             // Process the file asynchronously
             fileProcessingService.processReservationsFile(tempFile, createdJob.getJobId());
+
+            return ResponseEntity.accepted().body("File request accepted for processing with Job ID: " + createdJob.getJobId());
+        } catch (IOException e) {
+            log.error("Error processing uploaded file", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error processing file: " + fileContent.getOriginalFilename());
+        }
+    }
+
+    @PostMapping(value = "/payments",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> processPayment(
+            @RequestPart ("file") MultipartFile fileContent
+    ) {
+        try {
+            // Saving in local storage temporarily for processing asynchronously
+            String filename = Optional.ofNullable(fileContent.getOriginalFilename())
+                    .orElseThrow(() -> new IllegalArgumentException("Filename is null"));
+
+            Path tempFilePath = Files.createTempFile(
+                    String.format("%s-%s", FilenameUtils.getBaseName(filename), UUID.randomUUID()),
+                    "." + FilenameUtils.getExtension(filename).toLowerCase());
+            fileContent.transferTo(tempFilePath);
+            File tempFile = tempFilePath.toFile();
+
+            // Start job tracking in DB
+            FileJob createdJob = fileJobService.createFileJob(FileJobCreateRequest.builder()
+                    .fileName(tempFile.getName())
+                    .fileExtension(FilenameUtils.getExtension(filename).toLowerCase())
+                    .build());
+
+            // Process the file asynchronously
+            fileProcessingService.processPaymentTransactionsFile(tempFile, createdJob.getJobId());
 
             return ResponseEntity.accepted().body("File request accepted for processing with Job ID: " + createdJob.getJobId());
         } catch (IOException e) {

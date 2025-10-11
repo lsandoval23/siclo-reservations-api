@@ -5,12 +5,14 @@ import org.creati.sicloReservationsApi.cache.model.EntityCache;
 import org.creati.sicloReservationsApi.dao.postgre.ClientRepository;
 import org.creati.sicloReservationsApi.dao.postgre.DisciplineRepository;
 import org.creati.sicloReservationsApi.dao.postgre.InstructorRepository;
+import org.creati.sicloReservationsApi.dao.postgre.PaymentTransactionRepository;
 import org.creati.sicloReservationsApi.dao.postgre.ReservationRepository;
 import org.creati.sicloReservationsApi.dao.postgre.RoomRepository;
 import org.creati.sicloReservationsApi.dao.postgre.StudioRepository;
 import org.creati.sicloReservationsApi.dao.postgre.model.Client;
 import org.creati.sicloReservationsApi.dao.postgre.model.Discipline;
 import org.creati.sicloReservationsApi.dao.postgre.model.Instructor;
+import org.creati.sicloReservationsApi.dao.postgre.model.PaymentTransaction;
 import org.creati.sicloReservationsApi.dao.postgre.model.Reservation;
 import org.creati.sicloReservationsApi.dao.postgre.model.Room;
 import org.creati.sicloReservationsApi.dao.postgre.model.Studio;
@@ -28,6 +30,7 @@ import java.util.List;
 public class BatchPersistenceServiceImpl implements BatchPersistenceService {
 
     private final ReservationRepository reservationRepository;
+    private final PaymentTransactionRepository paymentRepository;
     private final ClientRepository clientRepository;
     private final StudioRepository studioRepository;
     private final RoomRepository roomRepository;
@@ -36,12 +39,14 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
 
     public BatchPersistenceServiceImpl(
             final ReservationRepository reservationRepository,
+            final PaymentTransactionRepository paymentRepository,
             final ClientRepository clientRepository,
             final StudioRepository studioRepository,
             final RoomRepository roomRepository,
             final DisciplineRepository disciplineRepository,
             final InstructorRepository instructorRepository) {
         this.reservationRepository = reservationRepository;
+        this.paymentRepository = paymentRepository;
         this.clientRepository = clientRepository;
         this.studioRepository = studioRepository;
         this.roomRepository = roomRepository;
@@ -95,8 +100,41 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
     }
 
     @Override
-    public void persistPaymentsBatch(List<PaymentDto> paymentDtoList, EntityCache cache) {
-        // TODO implementation for payments batch
+    public ProcessingResult persistPaymentsBatch(List<PaymentDto> paymentDtoList, EntityCache cache) {
+
+        List<String> errors = new ArrayList<>();
+        List<PaymentTransaction> paymentsToSave = new ArrayList<>();
+
+        int processedRows = 0;
+        int errorRows = 0;
+        int skippedRows = 0;
+
+        for (int i = 0; i < paymentDtoList.size(); i++) {
+            PaymentDto payment = paymentDtoList.get(i);
+            try {
+                PaymentTransaction paymentEntity = buildPaymentEntity(payment, cache);
+                paymentsToSave.add(paymentEntity);
+                processedRows++;
+            } catch (Exception e) {
+                errorRows++;
+                errors.add(String.format("Error processing row %d: %s", i + 1, e.getMessage()));
+                log.error("Error processing payment at row {}: exception: {}", i + 1, e.getMessage());
+            }
+        }
+
+        if (!paymentsToSave.isEmpty()) {
+            paymentRepository.saveAll(paymentsToSave);
+            log.info("Saved {} new payments", paymentsToSave.size());
+        }
+
+        return ProcessingResult.builder()
+                .success(errorRows == 0)
+                .totalRows(paymentDtoList.size())
+                .processedRows(processedRows)
+                .errorRows(errorRows)
+                .skippedRows(skippedRows)
+                .errors(errors)
+                .build();
 
     }
 
@@ -156,6 +194,38 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
                 .orderCreator(dto.getOrderCreator())
                 .paymentMethod(dto.getPaymentMethod())
                 .status(dto.getStatus())
+                .build();
+    }
+
+
+    private PaymentTransaction buildPaymentEntity(PaymentDto dto, EntityCache cache) {
+
+        Client newClient = cache.getClientsByEmail().computeIfAbsent(dto.getClientEmail(), email -> {
+            log.info("Creating new client for email: {}", email);
+            Client client = Client.builder()
+                    .phone(dto.getPhone())
+                    .documentId(dto.getDocumentId())
+                    .email(email)
+                    .build();
+            return clientRepository.save(client);
+        });
+
+        return PaymentTransaction.builder()
+                .month(dto.getMonth())
+                .day(dto.getDay())
+                .week(dto.getWeek())
+                .purchaseDate(dto.getPurchaseDate())
+                .accreditationDate(dto.getAccreditationDate())
+                .releaseDate(dto.getReleaseDate())
+                .operationType(dto.getOperationType())
+                .productValue(dto.getProductValue())
+                .transactionFee(dto.getTransactionFee())
+                .amountReceived(dto.getAmountReceived())
+                .installments(dto.getInstallments())
+                .paymentMethod(dto.getPaymentMethod())
+                .packageName(dto.getPackageName())
+                .classCount(dto.getClassCount())
+                .client(newClient)
                 .build();
     }
 

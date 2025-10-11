@@ -15,6 +15,7 @@ spring:
         batch_versioned_data: true
       order_inserts: true
       order_updates: true
+  servlet:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB

@@ -15,11 +15,11 @@ import org.creati.sicloReservationsApi.service.BatchPersistenceService;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -27,6 +27,7 @@ import java.util.List;
 public class ExcelProcessingService implements FileProcessingService {
 
     private final ExcelParser parser;
+    private final StreamingExcelParser streamingParser;
     private final BatchPersistenceService batchPersistenceService;
     private final EntityCacheService entityCacheService;
     private final FileJobService fileJobService;
@@ -35,11 +36,13 @@ public class ExcelProcessingService implements FileProcessingService {
 
     public ExcelProcessingService(
             final ExcelParser parser,
+            final StreamingExcelParser streamingParser,
             final BatchPersistenceService batchPersistenceService,
             final EntityCacheService entityCacheService,
             final FileJobService fileJobService,
             final ObjectMapper objectMapper) {
         this.parser = parser;
+        this.streamingParser = streamingParser;
         this.batchPersistenceService = batchPersistenceService;
         this.entityCacheService = entityCacheService;
         this.fileJobService = fileJobService;
@@ -62,9 +65,29 @@ public class ExcelProcessingService implements FileProcessingService {
                 .build(), jobFound);
 
         try {
-            List<ReservationDto> reservationList = parser.parseReservationsFromFile(fileData);
-            EntityCache cache = entityCacheService.preloadEntitiesForReservation(reservationList);
-            ProcessingResult batchProcessingResult = batchPersistenceService.persistReservationsBatch(reservationList, cache);
+
+
+            List<ProcessingResult> batchResults = new ArrayList<>();
+            streamingParser.parseReservationsFromFile(
+                    fileData,
+                    "RESERVATION",
+                    100,
+                    entityCacheService,
+                    (reservationBatch, cache) -> {
+                        ProcessingResult batchResult = batchPersistenceService.persistReservationsBatch(reservationBatch, cache);
+                        batchResults.add(batchResult);
+                        log.info("Processed batch of {} reservations. Result: {}", reservationBatch.size(), batchResult);
+                    });
+
+            // Aggregate batch results
+            ProcessingResult batchProcessingResult = ProcessingResult.builder()
+                    .success(batchResults.stream().allMatch(ProcessingResult::isSuccess))
+                    .totalRows(batchResults.stream().mapToInt(ProcessingResult::getTotalRows).sum())
+                    .processedRows(batchResults.stream().mapToInt(ProcessingResult::getProcessedRows).sum())
+                    .skippedRows(batchResults.stream().mapToInt(ProcessingResult::getSkippedRows).sum())
+                    .errorRows(batchResults.stream().mapToInt(ProcessingResult::getErrorRows).sum())
+                    .errors(batchResults.stream().flatMap(r -> r.getErrors().stream()).toList())
+                    .build();
 
             // Determine job status based on the processing result
             FileJob.JobStatus jobStatus = batchProcessingResult.isSuccess()
@@ -97,8 +120,70 @@ public class ExcelProcessingService implements FileProcessingService {
     }
 
     @Override
+    @Async
     @Transactional
-    public void processPaymentTransactionsFile(File fileData) {
+    public void processPaymentTransactionsFile(File fileData, Long jobId) {
+
+        log.info("Starting processing payment file: {} with jobId: {}", fileData.getName(), jobId);
+        FileJob jobFound = fileJobService.getFileJobById(jobId)
+                .orElseThrow(() -> new FileProcessingException("File job not found with id: " + jobId));
+
+        // Update job status to IN_PROGRESS
+        fileJobService.updateStatus(jobFound.getJobId(), FileJobUpdateRequest.builder()
+                .status(FileJob.JobStatus.IN_PROGRESS)
+                .build(), jobFound);
+
+        try {
+
+            List<ProcessingResult> batchResults = new ArrayList<>();
+            streamingParser.parsePaymentsFromFile(
+                    fileData,
+                    "PAYMENT",
+                    100,
+                    entityCacheService,
+                    (reservationBatch, cache) -> {
+                        ProcessingResult batchResult = batchPersistenceService.persistPaymentsBatch(reservationBatch, cache);
+                        batchResults.add(batchResult);
+                        log.info("Processed batch of {} payments. Result: {}", reservationBatch.size(), batchResult);
+                    });
+
+            // Aggregate batch results
+            ProcessingResult batchProcessingResult = ProcessingResult.builder()
+                    .success(batchResults.stream().allMatch(ProcessingResult::isSuccess))
+                    .totalRows(batchResults.stream().mapToInt(ProcessingResult::getTotalRows).sum())
+                    .processedRows(batchResults.stream().mapToInt(ProcessingResult::getProcessedRows).sum())
+                    .skippedRows(batchResults.stream().mapToInt(ProcessingResult::getSkippedRows).sum())
+                    .errorRows(batchResults.stream().mapToInt(ProcessingResult::getErrorRows).sum())
+                    .errors(batchResults.stream().flatMap(r -> r.getErrors().stream()).toList())
+                    .build();
+
+            // Determine job status based on the processing result
+            FileJob.JobStatus jobStatus = batchProcessingResult.isSuccess()
+                    ? FileJob.JobStatus.SUCCESS
+                    : FileJob.JobStatus.FAILED;
+
+            // Build the common update request
+            FileJobUpdateRequest updateRequest = FileJobUpdateRequest.builder()
+                    .status(jobStatus)
+                    .finishedAt(LocalDateTime.now())
+                    .totalRecords(batchProcessingResult.getTotalRows())
+                    .processedRecords(batchProcessingResult.getProcessedRows())
+                    .skippedRecords(batchProcessingResult.getSkippedRows())
+                    .errorRecords(batchProcessingResult.getErrorRows())
+                    .processingResult(objectMapper.writeValueAsString(batchProcessingResult))
+                    .build();
+
+            // Update job status
+            fileJobService.updateStatus(jobId, updateRequest, jobFound);
+            log.info("Completed processing payment file: {} with jobId: {}. Result: {}", fileData.getName(), jobId, batchProcessingResult);
+
+        } catch (FileProcessingException | IOException exception) {
+            // If any error occurs, update job status to FAILED
+            log.error("Error processing payment file: {}", exception.getMessage(), exception);
+            fileJobService.updateStatus(jobId, FileJobUpdateRequest.builder()
+                    .status(FileJob.JobStatus.FAILED)
+                    .build(), jobFound);
+        }
 
     }
 

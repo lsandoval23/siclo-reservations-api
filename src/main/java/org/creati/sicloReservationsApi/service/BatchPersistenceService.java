@@ -11,6 +11,6 @@ public interface BatchPersistenceService {
 
     ProcessingResult persistReservationsBatch(List<ReservationDto> reservationDtoList, EntityCache cache);
 
-    void persistPaymentsBatch(List<PaymentDto> paymentDtoList, EntityCache cache);
+    ProcessingResult persistPaymentsBatch(List<PaymentDto> paymentDtoList, EntityCache cache);
 
 }

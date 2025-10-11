@@ -88,7 +88,7 @@ public class InMemoryCacheServiceImpl implements EntityCacheService {
             entityCache.getRoomsByStudioAndName().put(key, room);
         });
 
-        // Pre-cargar IDs de reservas existentes
+        // Preload existing reservations by reservationId
         Set<Long> reservationIds = reservations.stream()
                 .map(ReservationDto::getReservationId)
                 .collect(Collectors.toSet());

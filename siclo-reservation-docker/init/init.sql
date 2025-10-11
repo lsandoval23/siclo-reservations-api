@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS role_permissions CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS permissions CASCADE;
 DROP TABLE IF EXISTS file_processing_job CASCADE;
+DROP TABLE IF EXISTS excel_column_mapping CASCADE;
 
 -- ========================
 -- Client Table
@@ -130,6 +131,23 @@ CREATE TABLE file_processing_job (
     processing_result TEXT
 );
 CREATE INDEX idx_file_processing_status ON file_processing_job(status);
+
+-- ========================
+-- Excel Column Mapping Table
+-- ========================
+CREATE TABLE excel_column_mapping (
+    mapping_id      BIGSERIAL PRIMARY KEY,
+    file_type       VARCHAR(50) NOT NULL,
+    field_name      VARCHAR(100) NOT NULL,
+    excel_header    VARCHAR(255) NOT NULL,
+    required        BOOLEAN DEFAULT FALSE,
+    data_type       VARCHAR(50) DEFAULT 'STRING',
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(file_type, field_name)
+);
+
+-- Add indexes
+CREATE INDEX idx_excel_mapping_file_type ON excel_column_mapping(file_type);
 
 -- ========================
 -- User Table
@@ -272,3 +290,41 @@ INSERT INTO users (username, email, password, first_name, last_name) VALUES
 INSERT INTO user_roles (user_id, role_id)
 SELECT u.id, r.id FROM users u, roles r
 WHERE u.username = 'admin' AND r.name = 'ADMIN';
+
+
+-- Add initial mappings for payment transactions
+INSERT INTO excel_column_mapping (file_type, field_name, excel_header, required, data_type) VALUES
+('PAYMENT', 'month', 'Mes', true, 'INTEGER'),
+('PAYMENT', 'day', 'dia', true, 'INTEGER'),
+('PAYMENT', 'week', 'semana', false, 'INTEGER'),
+('PAYMENT', 'purchaseDate', 'Fecha de compra (date_created)', true, 'DATE'),
+('PAYMENT', 'accreditationDate', 'Fecha de acreditación (date_approved)', true, 'DATE'),
+('PAYMENT', 'releaseDate', 'Fecha de liberación del dinero (date_released)', false, 'DATE'),
+('PAYMENT', 'clientEmail', 'E-mail de la contraparte (counterpart_email)', true, 'STRING'),
+('PAYMENT', 'phone', 'Teléfono de la contraparte (counterpart_phone_number)', false, 'STRING'),
+('PAYMENT', 'documentId', 'Documento de la contraparte (buyer_document)', false, 'STRING'),
+('PAYMENT', 'operationType', 'Tipo de operación (operation_type)', true, 'STRING'),
+('PAYMENT', 'productValue', 'Valor del producto (transaction_amount)', true, 'DECIMAL'),
+('PAYMENT', 'transactionFee', 'Tarifa de Mercado Pago (mercadopago_fee)', true, 'DECIMAL'),
+('PAYMENT', 'amountReceived', 'Monto recibido (net_received_amount)', true, 'DECIMAL'),
+('PAYMENT', 'installments', 'Cuotas (installments)', false, 'INTEGER'),
+('PAYMENT', 'paymentMethod', 'Medio de pago (payment_type)', true, 'STRING'),
+('PAYMENT', 'packageName', 'paquete', false, 'STRING'),
+('PAYMENT', 'classCount', 'N° de clases', false, 'INTEGER');
+
+
+INSERT INTO excel_column_mapping (file_type, field_name, excel_header, required, data_type) VALUES
+('RESERVATION', 'reservationId', 'ID reserva', true, 'BIGINT'),
+('RESERVATION', 'classId', 'ID clase', true, 'BIGINT'),
+('RESERVATION', 'country', 'País', true, 'STRING'),
+('RESERVATION', 'city', 'Ciudad', true, 'STRING'),
+('RESERVATION', 'disciplineName', 'Disciplina', true, 'STRING'),
+('RESERVATION', 'studioName', 'Estudio', true, 'STRING'),
+('RESERVATION', 'roomName', 'Salon', true, 'STRING'),
+('RESERVATION', 'instructorName', 'Instructor', true, 'STRING'),
+('RESERVATION', 'day', 'Día', true, 'DATE'),
+('RESERVATION', 'time', 'Hora', true, 'TIME'),
+('RESERVATION', 'clientEmail', 'Cliente', true, 'STRING'),
+('RESERVATION', 'orderCreator', 'Creador del Pedido', true, 'STRING'),
+('RESERVATION', 'paymentMethod', 'Método de Pago', true, 'STRING'),
+('RESERVATION', 'status', 'Estatus', true, 'STRING');
