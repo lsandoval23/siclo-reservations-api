@@ -40,6 +40,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://siclo-reservations-db:5432/siclo-reservations
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin
+      JWT_SECRET: 29eec3c040d1a91fd8028e01142917849d0bafd88a02dc2d384c8d73699c52f5
     ports:
       - "8080:8080"
     depends_on:

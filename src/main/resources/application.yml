@@ -2,9 +2,9 @@ spring:
   application:
     name: siclo-reservations-api
   datasource:
-    url: ${spring.datasource.url}
-    username: ${spring.datasource.username}
-    password: ${spring.datasource.password}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -21,7 +21,7 @@ spring:
       max-request-size: 50MB
 
 jwt:
-  secret: ${jwt.secret}
+  secret: ${JWT_SECRET}
   expiration: 86400000 # 24 hours in ms
 
 auth:
