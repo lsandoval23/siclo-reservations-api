@@ -64,7 +64,7 @@ public class FileUploadController {
                     .build());
 
             // Process the file asynchronously
-            fileProcessingService.processReservationsFile(tempFile, createdJob.getJobId());
+            fileProcessingService.processFile(tempFile, createdJob.getJobId(), "RESERVATION");
 
             return ResponseEntity.accepted().body("File request accepted for processing with Job ID: " + createdJob.getJobId());
         } catch (IOException e) {
@@ -98,7 +98,7 @@ public class FileUploadController {
                     .build());
 
             // Process the file asynchronously
-            fileProcessingService.processPaymentTransactionsFile(tempFile, createdJob.getJobId());
+            fileProcessingService.processFile(tempFile, createdJob.getJobId(), "PAYMENT");
 
             return ResponseEntity.accepted().body("File request accepted for processing with Job ID: " + createdJob.getJobId());
         } catch (IOException e) {

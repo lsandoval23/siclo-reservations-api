@@ -5,15 +5,16 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.creati.sicloReservationsApi.cache.EntityCacheService;
-import org.creati.sicloReservationsApi.cache.model.EntityCache;
+import org.creati.sicloReservationsApi.exception.FileProcessingException;
 import org.creati.sicloReservationsApi.service.excel.util.ExcelUtils;
 import org.creati.sicloReservationsApi.service.model.PaymentDto;
 import org.creati.sicloReservationsApi.service.model.ReservationDto;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,29 +25,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 @Slf4j
 @Service
 public class StreamingExcelParser {
 
     private final ColumnMappingService columnMappingService;
-    private final EntityCacheService entityCacheService;
 
     public StreamingExcelParser(
-            final ColumnMappingService columnMappingService,
-            final EntityCacheService entityCacheService) {
+            final ColumnMappingService columnMappingService) {
         this.columnMappingService = columnMappingService;
-        this.entityCacheService = entityCacheService;
     }
 
 
     public <T> void parseFromFile(
             File file,
             String fileType,
+            Class<T> dtoClass,
             int batchSize,
-            BiConsumer<List<T>, EntityCache> batchProcessor,
-            String sheetName) throws IOException {
+            Consumer<List<T>> batchProcessor,
+            @Nullable String sheetName) throws IOException, IllegalArgumentException, FileProcessingException {
 
         try (Workbook workbook = ExcelUtils.createWorkbook(file)) {
 
@@ -54,13 +53,12 @@ public class StreamingExcelParser {
             Sheet sheet = Optional.ofNullable(sheetName)
                     .map(workbook::getSheet)
                     .orElse(workbook.getSheetAt(0));
-
             Iterator<Row> rowIterator = sheet.iterator();
 
+            // Validate if the sheet is empty
             if (!rowIterator.hasNext()) {
-                throw new IllegalArgumentException("The Excel file is empty.");
+                throw new IllegalArgumentException("The Excel Header is empty.");
             }
-
 
             Row headerRow = rowIterator.next();
             Map<Integer, String> columnIndexToFieldMap = new HashMap<>();
@@ -87,12 +85,6 @@ public class StreamingExcelParser {
 
             // Process data rows
             List<T> batch = new ArrayList<>();
-            Class<T> dtoClass = switch (fileType) {
-                case "RESERVATION" -> (Class<T>) ReservationDto.class;
-                case "PAYMENT" -> (Class<T>) PaymentDto.class;
-                default -> throw new IllegalArgumentException("Unsupported file type: " + fileType);
-            };
-
 
             while (rowIterator.hasNext()) {
                 Row row = rowIterator.next();
@@ -100,61 +92,56 @@ public class StreamingExcelParser {
                     continue;
                 }
 
+                // Parse row into DTO
                 T dto = parseRowDynamic(row, columnIndexToFieldMap, dtoClass);
                 batch.add(dto);
 
+                // Process batch if size reached
                 if (batch.size() >= batchSize) {
-                    EntityCache cache = (dto instanceof ReservationDto)
-                            ? entityCacheService.preloadEntitiesForReservation((List<ReservationDto>) batch)
-                            : entityCacheService.preloadEntitiesForPayments((List<PaymentDto>) batch);
-                    batchProcessor.accept(batch, cache);
+                    batchProcessor.accept(batch);
                     batch.clear();
                 }
-
             }
 
+            // Process any remaining records
             if (!batch.isEmpty()) {
-                EntityCache cache = (batch.get(0) instanceof ReservationDto)
-                        ? entityCacheService.preloadEntitiesForReservation((List<ReservationDto>) batch)
-                        : entityCacheService.preloadEntitiesForPayments((List<PaymentDto>) batch);
-                batchProcessor.accept(batch, cache);
+                batchProcessor.accept(batch);
+                batch.clear();
             }
-
-
         }
 
     }
 
-    private <T> T parseRowDynamic(Row row, Map<Integer, String> columnIndexToFieldMap, Class<T> dtoClass) {
+    private <T> T parseRowDynamic(Row row, Map<Integer, String> columnIndexToFieldMap, Class<T> dtoClass) throws RuntimeException {
+
         try {
+            // Create a new instance of the DTO class
             T dto = dtoClass.getDeclaredConstructor().newInstance();
 
+            // Set fields based on column mappings
             for (Map.Entry<Integer, String> entry : columnIndexToFieldMap.entrySet()) {
                 int columnIndex = entry.getKey();
                 String fieldName = entry.getValue();
                 Cell cell = row.getCell(columnIndex);
-
-                try {
-                    setFieldValue(dto, fieldName, cell);
-                } catch (Exception e) {
-                    log.error("Error setting field '{}' from column {}: {}", fieldName, columnIndex, e.getMessage());
-                    throw new RuntimeException("Error processing field: " + fieldName, e);
-                }
+                setFieldValue(dto, fieldName, cell);
             }
-
             return dto;
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error creating DTO instance of type " + dtoClass.getSimpleName(), e);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            log.error("Reflection error creating instance of {}: {}", dtoClass.getSimpleName(), e.getMessage());
+            throw new FileProcessingException("Error creating instance of " + dtoClass.getSimpleName(), e);
+        } catch (RuntimeException ex) {
+            log.error("Error setting field value: {}", ex.getMessage());
+            throw new FileProcessingException("Error setting field value", ex);
         }
+
     }
 
 
+    private <T> void setFieldValue(T dto, String fieldName, Cell cell) throws RuntimeException{
 
-    private <T> void setFieldValue(T dto, String fieldName, Cell cell) {
         try {
+            // Build setter method name (e.g., setFieldName) and find the method
             String setterName = "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
-
             Method setter = Arrays.stream(dto.getClass().getMethods())
                     .filter(m -> m.getName().equals(setterName) && m.getParameterCount() == 1)
                     .findFirst()
@@ -165,17 +152,16 @@ public class StreamingExcelParser {
                 return;
             }
 
+            // Convert cell value to the appropriate type and invoke the setter
             Class<?> paramType = setter.getParameterTypes()[0];
             Object value = ExcelUtils.convertCellValue(cell, paramType);
-
             setter.invoke(dto, value);
 
-        } catch (Exception e) {
-            log.error("Error setting field value for {}: {}", fieldName, e.getMessage());
-            throw new RuntimeException("Error setting field: " + fieldName, e);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            log.error("Reflection error invoking setter for field '{}': {}", fieldName, e.getMessage());
+            throw new RuntimeException(e);
         }
+
     }
-
-
 
 }
