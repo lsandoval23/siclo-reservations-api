@@ -7,6 +7,7 @@ import org.creati.sicloReservationsApi.dao.postgre.model.FileJob;
 import org.creati.sicloReservationsApi.service.FileJobService;
 import org.creati.sicloReservationsApi.service.FileProcessingService;
 import org.creati.sicloReservationsApi.service.model.FileJobCreateRequest;
+import org.creati.sicloReservationsApi.service.model.FileType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -61,10 +62,11 @@ public class FileUploadController {
             FileJob createdJob = fileJobService.createFileJob(FileJobCreateRequest.builder()
                     .fileName(tempFile.getName())
                     .fileExtension(FilenameUtils.getExtension(filename).toLowerCase())
+                    .fileType(FileType.RESERVATION)
                     .build());
 
             // Process the file asynchronously
-            fileProcessingService.processFile(tempFile, createdJob.getJobId(), "RESERVATION");
+            fileProcessingService.processFile(tempFile, createdJob.getJobId(), FileType.RESERVATION);
 
             return ResponseEntity.accepted().body("File request accepted for processing with Job ID: " + createdJob.getJobId());
         } catch (IOException e) {
@@ -95,10 +97,11 @@ public class FileUploadController {
             FileJob createdJob = fileJobService.createFileJob(FileJobCreateRequest.builder()
                     .fileName(tempFile.getName())
                     .fileExtension(FilenameUtils.getExtension(filename).toLowerCase())
+                    .fileType(FileType.PAYMENT)
                     .build());
 
             // Process the file asynchronously
-            fileProcessingService.processFile(tempFile, createdJob.getJobId(), "PAYMENT");
+            fileProcessingService.processFile(tempFile, createdJob.getJobId(), FileType.PAYMENT);
 
             return ResponseEntity.accepted().body("File request accepted for processing with Job ID: " + createdJob.getJobId());
         } catch (IOException e) {

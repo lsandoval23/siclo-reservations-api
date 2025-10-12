@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public class FileJobUpdateRequest {
 
     private final FileJob.JobStatus status;
+    private final String errorMessage;
     private final LocalDateTime finishedAt;
     private final Integer totalRecords;
     private final Integer processedRecords;

@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.creati.sicloReservationsApi.service.model.FileType;
 
 import java.time.LocalDateTime;
 
@@ -34,7 +35,14 @@ public class FileJob {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    private FileType fileType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private JobStatus status;
+
+    @Column(columnDefinition = "TEXT")
+    private String errorMessage;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -49,7 +57,7 @@ public class FileJob {
     private String processingResult;
 
 
-    public static enum JobStatus {
+    public enum JobStatus {
         PENDING,
         IN_PROGRESS,
         SUCCESS,

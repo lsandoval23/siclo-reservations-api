@@ -7,8 +7,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.creati.sicloReservationsApi.exception.FileProcessingException;
 import org.creati.sicloReservationsApi.service.excel.util.ExcelUtils;
-import org.creati.sicloReservationsApi.service.model.PaymentDto;
-import org.creati.sicloReservationsApi.service.model.ReservationDto;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 

@@ -32,21 +32,6 @@ public class ColumnMappingService {
         return headerToFieldMap;
     }
 
-
-    public Set<String> getRequiredFields(String fileType) {
-        return columnMappingRepository.findByFileType(fileType).stream()
-                .filter(ExcelColumnMapping::isRequired)
-                .map(ExcelColumnMapping::getFieldName)
-                .collect(java.util.stream.Collectors.toSet());
-    }
-
-    public Set<String> getRequiredHeaders(String fileType) {
-        return columnMappingRepository.findByFileType(fileType).stream()
-                .filter(ExcelColumnMapping::isRequired)
-                .map(ExcelColumnMapping::getExcelHeader)
-                .collect(java.util.stream.Collectors.toSet());
-    }
-
     public Boolean validateRequiredHeaders(Set<String> excelHeaders, String fileType) {
 
         List<ExcelColumnMapping> requiredMappings = columnMappingRepository.findByFileType(fileType).stream()

@@ -9,6 +9,7 @@ import org.creati.sicloReservationsApi.exception.FileProcessingException;
 import org.creati.sicloReservationsApi.service.FileJobService;
 import org.creati.sicloReservationsApi.service.FileProcessingService;
 import org.creati.sicloReservationsApi.service.model.FileJobUpdateRequest;
+import org.creati.sicloReservationsApi.service.model.FileType;
 import org.creati.sicloReservationsApi.service.model.PaymentDto;
 import org.creati.sicloReservationsApi.service.model.ProcessingResult;
 import org.creati.sicloReservationsApi.service.BatchPersistenceService;
@@ -55,7 +56,7 @@ public class ExcelProcessingService implements FileProcessingService {
     @Override
     @Async
     @Transactional
-    public void processFile(File fileData, Long jobId, String fileType) {
+    public void processFile(File fileData, Long jobId, FileType fileType) {
         log.info("Starting processing file: {} of type {} with jobId: {}", fileData.getName(), fileType, jobId);
 
         FileJob jobFound = fileJobService.getFileJobById(jobId)
@@ -70,7 +71,7 @@ public class ExcelProcessingService implements FileProcessingService {
 
             streamingParser.parseFromFile(
                     fileData,
-                    fileType,
+                    fileType.name(),
                     strategy.dtoClass(),
                     MAX_ITEMS_IN_BATCH,
                     (batch) -> {
@@ -111,20 +112,36 @@ public class ExcelProcessingService implements FileProcessingService {
             log.error("Error processing file {} of type {}: {}", fileData.getName(), fileType, exception.getMessage(), exception);
             fileJobService.updateStatus(jobId, FileJobUpdateRequest.builder()
                     .status(FileJob.JobStatus.FAILED)
+                    .errorMessage(exception.getMessage())
                     .build(), jobFound);
         } catch (IllegalArgumentException illegalArgumentException) {
-            log.error("Error: {}", illegalArgumentException.getMessage(), illegalArgumentException);
+            log.error("Error in input file format: {}", illegalArgumentException.getMessage(), illegalArgumentException);
             fileJobService.updateStatus(jobId, FileJobUpdateRequest.builder()
+                    .errorMessage(illegalArgumentException.getMessage())
                     .status(FileJob.JobStatus.FAILED)
                     .build(), jobFound);
+        } catch (Exception e) {
+            log.error("Unexpected error processing file {} of type {}: {}", fileData.getName(), fileType, e.getMessage(), e);
+            fileJobService.updateStatus(jobId, FileJobUpdateRequest.builder()
+                    .status(FileJob.JobStatus.FAILED)
+                    .errorMessage("Unexpected error: " + e.getMessage())
+                    .build(), jobFound);
+        } finally {
+            // Clean up the temporary file
+            if (fileData.exists()) {
+                boolean deleted = fileData.delete();
+                if (!deleted) {
+                    log.warn("Failed to delete temporary file: {}", fileData.getAbsolutePath());
+                }
+            }
         }
 
     }
 
-    private FileProcessingStrategy<?> getFileProcessingStrategy(String fileType) {
+    private FileProcessingStrategy<?> getFileProcessingStrategy(FileType fileType) {
 
-        Map<String, FileProcessingStrategy<?>> strategyMap = Map.of(
-                "RESERVATION", new FileProcessingStrategy<>(
+        Map<FileType, FileProcessingStrategy<?>> strategyMap = Map.of(
+                FileType.RESERVATION, new FileProcessingStrategy<>(
                         ReservationDto.class,
                         (batch) -> {
                             EntityCache cache = entityCacheService.preloadEntitiesForReservation(batch);
@@ -132,7 +149,7 @@ public class ExcelProcessingService implements FileProcessingService {
                         },
                         null
                 ),
-                "PAYMENT", new FileProcessingStrategy<>(
+                FileType.PAYMENT, new FileProcessingStrategy<>(
                         PaymentDto.class,
                         (batch) -> {
                             EntityCache cache = entityCacheService.preloadEntitiesForPayments(batch);
@@ -142,7 +159,7 @@ public class ExcelProcessingService implements FileProcessingService {
                 )
         );
 
-        FileProcessingStrategy<?> strategy = strategyMap.get(fileType.toUpperCase());
+        FileProcessingStrategy<?> strategy = strategyMap.get(fileType);
         if (strategy == null) {
             throw new IllegalArgumentException("Unsupported file type: " + fileType);
         }
