@@ -15,11 +15,8 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -90,17 +87,20 @@ public class StreamingExcelParser {
 
             // Process data rows
             List<T> batch = new ArrayList<>();
+            Class<T> dtoClass = switch (fileType) {
+                case "RESERVATION" -> (Class<T>) ReservationDto.class;
+                case "PAYMENT" -> (Class<T>) PaymentDto.class;
+                default -> throw new IllegalArgumentException("Unsupported file type: " + fileType);
+            };
+
+
             while (rowIterator.hasNext()) {
                 Row row = rowIterator.next();
                 if (row == null || ExcelUtils.isEmptyRow(row)) {
                     continue;
                 }
 
-                T dto = switch (fileType) {
-                    case "RESERVATION" -> (T) parseReservationRowDynamic(row, columnIndexToFieldMap);
-                    case "PAYMENT" -> (T) parsePaymentRowDynamic(row, columnIndexToFieldMap);
-                    default -> throw new IllegalArgumentException("Unsupported file type: " + fileType);
-                };
+                T dto = parseRowDynamic(row, columnIndexToFieldMap, dtoClass);
                 batch.add(dto);
 
                 if (batch.size() >= batchSize) {
@@ -125,49 +125,40 @@ public class StreamingExcelParser {
 
     }
 
-
-    public ReservationDto parseReservationRowDynamic(Row row, Map<Integer, String> columnIndexToFieldMap) {
-        ReservationDto dto = new ReservationDto();
-
-        for (Map.Entry<Integer, String> entry : columnIndexToFieldMap.entrySet()) {
-            int columnIndex = entry.getKey();
-            String fieldName = entry.getValue();
-            Cell cell = row.getCell(columnIndex);
-
-            try {
-                setFieldValue(dto, fieldName, cell);
-            } catch (Exception e) {
-                log.error("Error setting field '{}' from column {}: {}", fieldName, columnIndex, e.getMessage());
-                throw new RuntimeException("Error processing field: " + fieldName, e);
-            }
-        }
-
-        return dto;
-    }
-
-    public PaymentDto parsePaymentRowDynamic(Row row, Map<Integer, String> columnIndexToFieldMap) {
-        PaymentDto dto = new PaymentDto();
-
-        for (Map.Entry<Integer, String> entry : columnIndexToFieldMap.entrySet()) {
-            int columnIndex = entry.getKey();
-            String fieldName = entry.getValue();
-            Cell cell = row.getCell(columnIndex);
-
-            try {
-                setFieldValuePayment(dto, fieldName, cell);
-            } catch (Exception e) {
-                log.error("Error setting field '{}' from column {}: {}", fieldName, columnIndex, e.getMessage());
-                throw new RuntimeException("Error processing field: " + fieldName, e);
-            }
-        }
-
-        return dto;
-    }
-
-    private void setFieldValue(ReservationDto dto, String fieldName, Cell cell) {
+    private <T> T parseRowDynamic(Row row, Map<Integer, String> columnIndexToFieldMap, Class<T> dtoClass) {
         try {
-            String setterName = "set" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
-            Method setter = findSetterMethod(dto.getClass(), setterName);
+            T dto = dtoClass.getDeclaredConstructor().newInstance();
+
+            for (Map.Entry<Integer, String> entry : columnIndexToFieldMap.entrySet()) {
+                int columnIndex = entry.getKey();
+                String fieldName = entry.getValue();
+                Cell cell = row.getCell(columnIndex);
+
+                try {
+                    setFieldValue(dto, fieldName, cell);
+                } catch (Exception e) {
+                    log.error("Error setting field '{}' from column {}: {}", fieldName, columnIndex, e.getMessage());
+                    throw new RuntimeException("Error processing field: " + fieldName, e);
+                }
+            }
+
+            return dto;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error creating DTO instance of type " + dtoClass.getSimpleName(), e);
+        }
+    }
+
+
+
+    private <T> void setFieldValue(T dto, String fieldName, Cell cell) {
+        try {
+            String setterName = "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+
+            Method setter = Arrays.stream(dto.getClass().getMethods())
+                    .filter(m -> m.getName().equals(setterName) && m.getParameterCount() == 1)
+                    .findFirst()
+                    .orElse(null);
 
             if (setter == null) {
                 log.warn("No setter found for field: {}", fieldName);
@@ -175,7 +166,7 @@ public class StreamingExcelParser {
             }
 
             Class<?> paramType = setter.getParameterTypes()[0];
-            Object value = convertCellValue(cell, paramType);
+            Object value = ExcelUtils.convertCellValue(cell, paramType);
 
             setter.invoke(dto, value);
 
@@ -184,79 +175,6 @@ public class StreamingExcelParser {
             throw new RuntimeException("Error setting field: " + fieldName, e);
         }
     }
-
-    private void setFieldValuePayment(PaymentDto dto, String fieldName, Cell cell) {
-        try {
-            String setterName = "set" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
-            Method setter = findSetterMethod(dto.getClass(), setterName);
-
-            if (setter == null) {
-                log.warn("No setter found for field: {}", fieldName);
-                return;
-            }
-
-            Class<?> paramType = setter.getParameterTypes()[0];
-            Object value = convertCellValue(cell, paramType);
-
-            setter.invoke(dto, value);
-
-        } catch (Exception e) {
-            log.error("Error setting field value for {}: {}", fieldName, e.getMessage());
-            throw new RuntimeException("Error setting field: " + fieldName, e);
-        }
-    }
-
-    private Method findSetterMethod(Class<?> clazz, String setterName) {
-        for (Method method : clazz.getMethods()) {
-            if (method.getName().equals(setterName) && method.getParameterCount() == 1) {
-                return method;
-            }
-        }
-        return null;
-    }
-
-    private Object convertCellValue(Cell cell, Class<?> targetType) {
-        if (cell == null) {
-            return null;
-        }
-
-        if (targetType == Long.class || targetType == long.class) {
-            return ExcelUtils.getCellLongValue(cell);
-        } else if (targetType == String.class) {
-            return ExcelUtils.getCellStringValue(cell);
-        } else if (targetType == LocalDate.class) {
-            return ExcelUtils.getCellDateValue(cell);
-        } else if (targetType == LocalTime.class) {
-            return ExcelUtils.getCellTimeValue(cell);
-        } else if (targetType == LocalDateTime.class){
-            return ExcelUtils.getCellDateTimeValue(cell);
-        } else if (targetType == Integer.class || targetType == int.class) {
-            Long value = ExcelUtils.getCellLongValue(cell);
-            return value != null ? value.intValue() : null;
-        } else if (targetType == Double.class || targetType == double.class) {
-            return cell.getNumericCellValue();
-        } else if (targetType == Boolean.class || targetType == boolean.class) {
-            return cell.getBooleanCellValue();
-        } else if (targetType == BigDecimal.class ) {
-            return ExcelUtils.getCellBigDecimalValue(cell);
-        }
-
-        return ExcelUtils.getCellStringValue(cell);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

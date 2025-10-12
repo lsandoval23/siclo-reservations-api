@@ -232,6 +232,37 @@ public class ExcelUtils {
 
 
 
+    public static Object convertCellValue(Cell cell, Class<?> targetType) {
+        if (cell == null) {
+            return null;
+        }
+
+        if (targetType == Long.class || targetType == long.class) {
+            return ExcelUtils.getCellLongValue(cell);
+        } else if (targetType == String.class) {
+            return ExcelUtils.getCellStringValue(cell);
+        } else if (targetType == LocalDate.class) {
+            return ExcelUtils.getCellDateValue(cell);
+        } else if (targetType == LocalTime.class) {
+            return ExcelUtils.getCellTimeValue(cell);
+        } else if (targetType == LocalDateTime.class){
+            return ExcelUtils.getCellDateTimeValue(cell);
+        } else if (targetType == Integer.class || targetType == int.class) {
+            Long value = ExcelUtils.getCellLongValue(cell);
+            return value != null ? value.intValue() : null;
+        } else if (targetType == Double.class || targetType == double.class) {
+            return cell.getNumericCellValue();
+        } else if (targetType == Boolean.class || targetType == boolean.class) {
+            return cell.getBooleanCellValue();
+        } else if (targetType == BigDecimal.class ) {
+            return ExcelUtils.getCellBigDecimalValue(cell);
+        }
+
+        return ExcelUtils.getCellStringValue(cell);
+    }
+
+
+
 
 
 
