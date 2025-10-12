@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -36,6 +37,14 @@ public class ExcelUtils {
             DateTimeFormatter.ofPattern("H:mm"),
             DateTimeFormatter.ofPattern("HH:mm:ss"),
             DateTimeFormatter.ISO_LOCAL_TIME
+    );
+
+
+    private static final List<DateTimeFormatter> DATE_TIME_FORMATTERS = List.of(
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"),
+            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+            DateTimeFormatter.ISO_LOCAL_DATE_TIME
     );
 
     public static Workbook createWorkbook(File file) throws IOException {
@@ -64,18 +73,29 @@ public class ExcelUtils {
 
     public static String getCellStringValue(Cell cell) {
         if (cell == null) return "";
-        return switch (cell.getCellType()) {
+        CellType type = cell.getCellType();
+        if (type == CellType.FORMULA) {
+            type = cell.getCachedFormulaResultType();
+        }
+
+        return switch (type) {
             case STRING -> cell.getStringCellValue().trim();
             case NUMERIC -> String.valueOf(cell.getNumericCellValue());
             case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
-            case FORMULA -> cell.getCellFormula();
             default -> "";
         };
     }
 
     public static Long getCellLongValue(Cell cell) {
         if (cell == null) return null;
-        return switch (cell.getCellType()) {
+
+        CellType type = cell.getCellType();
+
+        if (type == CellType.FORMULA) {
+            type = cell.getCachedFormulaResultType();
+        }
+
+        return switch (type) {
             case NUMERIC -> (long) cell.getNumericCellValue();
             case STRING -> {
                 try {
@@ -113,7 +133,14 @@ public class ExcelUtils {
 
     public static BigDecimal getCellBigDecimalValue(Cell cell) {
         if (cell == null) return null;
-        return switch (cell.getCellType()) {
+
+        CellType type = cell.getCellType();
+
+        if (type == CellType.FORMULA) {
+            type = cell.getCachedFormulaResultType();
+        }
+
+        return switch (type) {
             case NUMERIC -> BigDecimal.valueOf(cell.getNumericCellValue());
             case STRING -> {
                 try {
@@ -168,6 +195,35 @@ public class ExcelUtils {
                 } catch (DateTimeParseException ignored) {
                     log.info("failed to parse time {} with formatter {}", value, formatter);
                 }
+            }
+        }
+
+        return null;
+    }
+
+
+    public static LocalDateTime getCellDateTimeValue(Cell cell) {
+        if (cell == null) return null;
+
+        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+            return cell.getLocalDateTimeCellValue();
+        }
+
+        if (cell.getCellType() == CellType.STRING) {
+            String value = cell.getStringCellValue().trim();
+            if (value.isEmpty()) return null;
+            for (DateTimeFormatter dateTimeFormatter : DATE_TIME_FORMATTERS) {
+                try {
+                    return LocalDateTime.parse(value, dateTimeFormatter);
+                } catch (DateTimeParseException ignored) {
+                    log.info("failed to parse datetime {} with formatter {}", value, dateTimeFormatter);
+                }
+            }
+            // Try ISO_LOCAL_DATE_TIME as a last resort
+            try {
+                return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            } catch (DateTimeParseException ignored) {
+                log.info("failed to parse datetime {} with ISO_LOCAL_DATE_TIME", value);
             }
         }
 

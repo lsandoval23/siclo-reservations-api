@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.creati.sicloReservationsApi.cache.EntityCacheService;
 import org.creati.sicloReservationsApi.cache.model.EntityCache;
 import org.creati.sicloReservationsApi.service.excel.util.ExcelUtils;
@@ -13,12 +13,11 @@ import org.creati.sicloReservationsApi.service.model.ReservationDto;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
@@ -34,34 +34,49 @@ import java.util.function.BiConsumer;
 public class StreamingExcelParser {
 
     private final ColumnMappingService columnMappingService;
+    private final EntityCacheService entityCacheService;
 
     public StreamingExcelParser(
-            final ColumnMappingService columnMappingService) {
+            final ColumnMappingService columnMappingService,
+            final EntityCacheService entityCacheService) {
         this.columnMappingService = columnMappingService;
+        this.entityCacheService = entityCacheService;
     }
 
-    public void parseReservationsFromFile(
+
+    public <T> void parseFromFile(
             File file,
             String fileType,
             int batchSize,
-            EntityCacheService entityCacheService,
-            BiConsumer<List<ReservationDto>, EntityCache> batchProcessor) throws IOException {
+            BiConsumer<List<T>, EntityCache> batchProcessor,
+            String sheetName) throws IOException {
 
-        try (InputStream inputStream = new FileInputStream(file);
-        XSSFWorkbook xssfWorkbook = new XSSFWorkbook(inputStream)) {
+        try (Workbook workbook = ExcelUtils.createWorkbook(file)) {
 
             Map<String, String> headerToFieldMap = columnMappingService.getHeaderToFieldMapping(fileType);
-            Sheet sheet = xssfWorkbook.getSheetAt(0);
+            Sheet sheet = Optional.ofNullable(sheetName)
+                    .map(workbook::getSheet)
+                    .orElse(workbook.getSheetAt(0));
+
             Iterator<Row> rowIterator = sheet.iterator();
 
             if (!rowIterator.hasNext()) {
                 throw new IllegalArgumentException("The Excel file is empty.");
             }
 
-            // Build mapping of column indexes to field names
+
             Row headerRow = rowIterator.next();
             Map<Integer, String> columnIndexToFieldMap = new HashMap<>();
-            for (Cell cell: headerRow) {
+
+            // Validate required headers
+            Set<String> excelHeaders = new HashSet<>();
+            headerRow.forEach(cell -> excelHeaders.add(ExcelUtils.getCellStringValue(cell)));
+            if (!columnMappingService.validateRequiredHeaders(excelHeaders, fileType)) {
+                throw new IllegalArgumentException("Missing required headers in the Excel file.");
+            }
+
+            //Build mapping of column indexes to field names
+            for (Cell cell : headerRow) {
                 String headerValue = ExcelUtils.getCellStringValue(cell);
                 String fieldName = headerToFieldMap.get(headerValue);
 
@@ -73,121 +88,45 @@ public class StreamingExcelParser {
                 }
             }
 
-            // Validate required headers
-            Set<String> excelHeaders = new HashSet<>();
-            headerRow.forEach(cell -> excelHeaders.add(ExcelUtils.getCellStringValue(cell)));
-            if (!columnMappingService.validateRequiredHeaders(excelHeaders, fileType)) {
-                throw new IllegalArgumentException("Missing required headers in the Excel file.");
-            }
-
             // Process data rows
-            int rowIndex = 1; // Start after header
-            List<ReservationDto> batch = new ArrayList<>();
-
+            List<T> batch = new ArrayList<>();
             while (rowIterator.hasNext()) {
                 Row row = rowIterator.next();
-
-                // Continue if row is null or empty
                 if (row == null || ExcelUtils.isEmptyRow(row)) {
-                    rowIndex++;
                     continue;
                 }
 
-                ReservationDto dto = parseReservationRowDynamic(row, columnIndexToFieldMap);
+                T dto = switch (fileType) {
+                    case "RESERVATION" -> (T) parseReservationRowDynamic(row, columnIndexToFieldMap);
+                    case "PAYMENT" -> (T) parsePaymentRowDynamic(row, columnIndexToFieldMap);
+                    default -> throw new IllegalArgumentException("Unsupported file type: " + fileType);
+                };
                 batch.add(dto);
 
                 if (batch.size() >= batchSize) {
-                    EntityCache cache = entityCacheService.preloadEntitiesForReservation(batch);
+                    EntityCache cache = (dto instanceof ReservationDto)
+                            ? entityCacheService.preloadEntitiesForReservation((List<ReservationDto>) batch)
+                            : entityCacheService.preloadEntitiesForPayments((List<PaymentDto>) batch);
                     batchProcessor.accept(batch, cache);
                     batch.clear();
                 }
+
             }
 
-            // Process any remaining records in the last batch
             if (!batch.isEmpty()) {
-                EntityCache cache = entityCacheService.preloadEntitiesForReservation(batch);
+                EntityCache cache = (batch.get(0) instanceof ReservationDto)
+                        ? entityCacheService.preloadEntitiesForReservation((List<ReservationDto>) batch)
+                        : entityCacheService.preloadEntitiesForPayments((List<PaymentDto>) batch);
                 batchProcessor.accept(batch, cache);
             }
-        }
 
-    }
 
-    public void parsePaymentsFromFile(
-            File file,
-            String fileType,
-            int batchSize,
-            EntityCacheService entityCacheService,
-            BiConsumer<List<PaymentDto>, EntityCache> batchProcessor) throws IOException {
-
-        try (InputStream inputStream = new FileInputStream(file);
-             XSSFWorkbook xssfWorkbook = new XSSFWorkbook(inputStream)) {
-
-            Map<String, String> headerToFieldMap = columnMappingService.getHeaderToFieldMapping(fileType);
-            Sheet sheet = xssfWorkbook.getSheet("M-pago");
-            Iterator<Row> rowIterator = sheet.iterator();
-
-            if (!rowIterator.hasNext()) {
-                throw new IllegalArgumentException("The Excel file is empty.");
-            }
-
-            // Build mapping of column indexes to field names
-            Row headerRow = rowIterator.next();
-            Map<Integer, String> columnIndexToFieldMap = new HashMap<>();
-            for (Cell cell: headerRow) {
-                String headerValue = ExcelUtils.getCellStringValue(cell);
-                String fieldName = headerToFieldMap.get(headerValue);
-
-                if (fieldName != null) {
-                    columnIndexToFieldMap.put(cell.getColumnIndex(), fieldName);
-                    log.debug("Mapped column {} '{}' to field '{}'", cell.getColumnIndex(), headerValue, fieldName);
-                } else {
-                    log.warn("No mapping found for header '{}' at column {}", headerValue, cell.getColumnIndex());
-                }
-            }
-
-            // Validate required headers
-            Set<String> excelHeaders = new HashSet<>();
-            headerRow.forEach(cell -> excelHeaders.add(ExcelUtils.getCellStringValue(cell)));
-            if (!columnMappingService.validateRequiredHeaders(excelHeaders, fileType)) {
-                throw new IllegalArgumentException("Missing required headers in the Excel file.");
-            }
-
-            // Process data rows
-            int rowIndex = 1; // Start after header
-            List<PaymentDto> batch = new ArrayList<>();
-
-            while (rowIterator.hasNext()) {
-                Row row = rowIterator.next();
-
-                // Continue if row is null or empty
-                if (row == null || ExcelUtils.isEmptyRow(row)) {
-                    rowIndex++;
-                    continue;
-                }
-
-                PaymentDto dto = parsePaymentRowDynamic(row, columnIndexToFieldMap);
-                batch.add(dto);
-
-                if (batch.size() >= batchSize) {
-                    EntityCache cache = entityCacheService.preloadEntitiesForPayments(batch);
-                    batchProcessor.accept(batch, cache);
-                    batch.clear();
-                }
-            }
-
-            // Process any remaining records in the last batch
-            if (!batch.isEmpty()) {
-                EntityCache cache = entityCacheService.preloadEntitiesForPayments(batch);
-                batchProcessor.accept(batch, cache);
-            }
         }
 
     }
 
 
-
-
-    private ReservationDto parseReservationRowDynamic(Row row, Map<Integer, String> columnIndexToFieldMap) {
+    public ReservationDto parseReservationRowDynamic(Row row, Map<Integer, String> columnIndexToFieldMap) {
         ReservationDto dto = new ReservationDto();
 
         for (Map.Entry<Integer, String> entry : columnIndexToFieldMap.entrySet()) {
@@ -206,7 +145,7 @@ public class StreamingExcelParser {
         return dto;
     }
 
-    private PaymentDto parsePaymentRowDynamic(Row row, Map<Integer, String> columnIndexToFieldMap) {
+    public PaymentDto parsePaymentRowDynamic(Row row, Map<Integer, String> columnIndexToFieldMap) {
         PaymentDto dto = new PaymentDto();
 
         for (Map.Entry<Integer, String> entry : columnIndexToFieldMap.entrySet()) {
@@ -289,6 +228,8 @@ public class StreamingExcelParser {
             return ExcelUtils.getCellDateValue(cell);
         } else if (targetType == LocalTime.class) {
             return ExcelUtils.getCellTimeValue(cell);
+        } else if (targetType == LocalDateTime.class){
+            return ExcelUtils.getCellDateTimeValue(cell);
         } else if (targetType == Integer.class || targetType == int.class) {
             Long value = ExcelUtils.getCellLongValue(cell);
             return value != null ? value.intValue() : null;

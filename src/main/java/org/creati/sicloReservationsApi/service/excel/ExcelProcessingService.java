@@ -2,16 +2,15 @@ package org.creati.sicloReservationsApi.service.excel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.creati.sicloReservationsApi.cache.EntityCacheService;
-import org.creati.sicloReservationsApi.cache.model.EntityCache;
 import org.creati.sicloReservationsApi.dao.postgre.model.FileJob;
 import org.creati.sicloReservationsApi.exception.FileProcessingException;
 import org.creati.sicloReservationsApi.service.FileJobService;
 import org.creati.sicloReservationsApi.service.FileProcessingService;
 import org.creati.sicloReservationsApi.service.model.FileJobUpdateRequest;
+import org.creati.sicloReservationsApi.service.model.PaymentDto;
 import org.creati.sicloReservationsApi.service.model.ProcessingResult;
-import org.creati.sicloReservationsApi.service.model.ReservationDto;
 import org.creati.sicloReservationsApi.service.BatchPersistenceService;
+import org.creati.sicloReservationsApi.service.model.ReservationDto;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,25 +25,19 @@ import java.util.List;
 @Service
 public class ExcelProcessingService implements FileProcessingService {
 
-    private final ExcelParser parser;
     private final StreamingExcelParser streamingParser;
     private final BatchPersistenceService batchPersistenceService;
-    private final EntityCacheService entityCacheService;
     private final FileJobService fileJobService;
     private final ObjectMapper objectMapper;
 
 
     public ExcelProcessingService(
-            final ExcelParser parser,
             final StreamingExcelParser streamingParser,
             final BatchPersistenceService batchPersistenceService,
-            final EntityCacheService entityCacheService,
             final FileJobService fileJobService,
             final ObjectMapper objectMapper) {
-        this.parser = parser;
         this.streamingParser = streamingParser;
         this.batchPersistenceService = batchPersistenceService;
-        this.entityCacheService = entityCacheService;
         this.fileJobService = fileJobService;
         this.objectMapper = objectMapper;
     }
@@ -66,18 +59,17 @@ public class ExcelProcessingService implements FileProcessingService {
 
         try {
 
-
             List<ProcessingResult> batchResults = new ArrayList<>();
-            streamingParser.parseReservationsFromFile(
+            streamingParser.<ReservationDto> parseFromFile(
                     fileData,
                     "RESERVATION",
                     100,
-                    entityCacheService,
                     (reservationBatch, cache) -> {
                         ProcessingResult batchResult = batchPersistenceService.persistReservationsBatch(reservationBatch, cache);
                         batchResults.add(batchResult);
                         log.info("Processed batch of {} reservations. Result: {}", reservationBatch.size(), batchResult);
-                    });
+                    },
+                    null);
 
             // Aggregate batch results
             ProcessingResult batchProcessingResult = ProcessingResult.builder()
@@ -136,16 +128,16 @@ public class ExcelProcessingService implements FileProcessingService {
         try {
 
             List<ProcessingResult> batchResults = new ArrayList<>();
-            streamingParser.parsePaymentsFromFile(
+            streamingParser.<PaymentDto> parseFromFile(
                     fileData,
                     "PAYMENT",
                     100,
-                    entityCacheService,
-                    (reservationBatch, cache) -> {
-                        ProcessingResult batchResult = batchPersistenceService.persistPaymentsBatch(reservationBatch, cache);
+                    (paymentBatch, cache) -> {
+                        ProcessingResult batchResult = batchPersistenceService.persistPaymentsBatch(paymentBatch, cache);
                         batchResults.add(batchResult);
-                        log.info("Processed batch of {} payments. Result: {}", reservationBatch.size(), batchResult);
-                    });
+                        log.info("Processed batch of {} payments. Result: {}", paymentBatch.size(), batchResult);
+                    },
+                    "M-pago");
 
             // Aggregate batch results
             ProcessingResult batchProcessingResult = ProcessingResult.builder()

@@ -42,13 +42,13 @@ public class PaymentTransaction {
     private Integer week;
 
     @Column(name = "purchase_date")
-    private LocalDate purchaseDate;
+    private LocalDateTime purchaseDate;
 
     @Column(name = "accreditation_date")
-    private LocalDate accreditationDate;
+    private LocalDateTime accreditationDate;
 
     @Column(name = "release_date")
-    private LocalDate releaseDate;
+    private LocalDateTime releaseDate;
 
     @Column(name = "operation_type", length = 100)
     private String operationType;

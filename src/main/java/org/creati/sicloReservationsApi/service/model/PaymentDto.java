@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -16,9 +17,9 @@ public class PaymentDto {
     private Integer month;
     private Integer day;
     private Integer week;
-    private LocalDate purchaseDate;
-    private LocalDate accreditationDate;
-    private LocalDate releaseDate;
+    private LocalDateTime purchaseDate;
+    private LocalDateTime accreditationDate;
+    private LocalDateTime releaseDate;
 
     @NotBlank(message = "Email es obligatorio")
     private String clientEmail;
