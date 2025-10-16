@@ -90,10 +90,10 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
 
         return ProcessingResult.builder()
                 .success(errorRows == 0)
-                .totalRows(reservationDtoList.size())
-                .processedRows(processedRows)
-                .errorRows(errorRows)
-                .skippedRows(skippedRows)
+                .totalProcessed(reservationDtoList.size())
+                .successCount(processedRows)
+                .failureCount(errorRows)
+                .skipped(skippedRows)
                 .errors(errors)
                 .build();
 
@@ -129,10 +129,10 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
 
         return ProcessingResult.builder()
                 .success(errorRows == 0)
-                .totalRows(paymentDtoList.size())
-                .processedRows(processedRows)
-                .errorRows(errorRows)
-                .skippedRows(skippedRows)
+                .totalProcessed(paymentDtoList.size())
+                .successCount(processedRows)
+                .failureCount(errorRows)
+                .skipped(skippedRows)
                 .errors(errors)
                 .build();
 

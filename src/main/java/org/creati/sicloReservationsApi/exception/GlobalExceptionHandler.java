@@ -1,7 +1,6 @@
 package org.creati.sicloReservationsApi.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.creati.sicloReservationsApi.auth.dto.ErrorResponse;
 import org.creati.sicloReservationsApi.auth.exception.DuplicateResourceException;
@@ -11,6 +10,7 @@ import org.creati.sicloReservationsApi.auth.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -103,13 +103,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolation(
-            ConstraintViolationException ex, HttpServletRequest request) {
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
+
+        String errorMessage = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .reduce((msg1, msg2) -> msg1 + "; " + msg2)
+                .orElse(ex.getMessage());
 
         ErrorResponse error = ErrorResponse.builder()
                 .code("INVALID_FIELD_ERROR")
-                .message(ex.getMessage())
+                .message(errorMessage)
                 .path(request.getRequestURI())
                 .timestamp(Instant.now())
                 .build();

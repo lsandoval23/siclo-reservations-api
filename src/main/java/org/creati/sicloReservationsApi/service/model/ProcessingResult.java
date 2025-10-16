@@ -12,10 +12,10 @@ import java.util.List;
 public class ProcessingResult {
 
     private boolean success;
-    private int totalRows;
-    private int processedRows;
-    private int errorRows;
-    private int skippedRows;
+    private int totalProcessed;
+    private int successCount;
+    private int failureCount;
+    private int skipped;
 
     @Builder.Default
     private List<String> errors = new ArrayList<>();

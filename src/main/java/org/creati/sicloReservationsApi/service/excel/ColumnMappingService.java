@@ -1,10 +1,16 @@
 package org.creati.sicloReservationsApi.service.excel;
 
 import lombok.extern.slf4j.Slf4j;
+import org.creati.sicloReservationsApi.auth.exception.ResourceNotFoundException;
 import org.creati.sicloReservationsApi.dao.postgre.ExcelColumnMappingRepository;
 import org.creati.sicloReservationsApi.dao.postgre.model.ExcelColumnMapping;
+import org.creati.sicloReservationsApi.service.model.BulkUpdateColumnMappingRequest;
+import org.creati.sicloReservationsApi.service.model.ColumnMappingDto;
+import org.creati.sicloReservationsApi.service.model.ProcessingResult;
+import org.creati.sicloReservationsApi.service.model.UpdateColumnMappingRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +25,74 @@ public class ColumnMappingService {
 
     public ColumnMappingService(ExcelColumnMappingRepository columnMappingRepository) {
         this.columnMappingRepository = columnMappingRepository;
+    }
+
+
+    public List<ColumnMappingDto> getAllMappings() {
+        return columnMappingRepository.findAll().stream()
+                .map(ExcelColumnMapping::toDto)
+                .toList();
+    }
+
+    public List<ColumnMappingDto> getMappingsByFileType(String fileType) {
+        return columnMappingRepository.findByFileType(fileType).stream()
+                .map(ExcelColumnMapping::toDto)
+                .toList();
+    }
+
+    public ColumnMappingDto getMappingById(Long id) {
+        return columnMappingRepository.findById(id)
+                .map(ExcelColumnMapping::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Excel column mapping not found with id: " + id));
+    }
+
+    public ColumnMappingDto updateMapping(Long id, UpdateColumnMappingRequest updateRequest) {
+        ExcelColumnMapping existingMapping = columnMappingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Excel column mapping not found with id: " + id));
+
+        ExcelColumnMapping mappingModified = existingMapping.toBuilder()
+                .excelHeader(updateRequest.getExcelHeader())
+                .required(updateRequest.getRequired())
+                .build();
+
+        ExcelColumnMapping updatedMapping = columnMappingRepository.save(mappingModified);
+        return updatedMapping.toDto();
+    }
+
+    public ProcessingResult bulkUpdateMappings(List<BulkUpdateColumnMappingRequest> updateRequests) {
+
+        int successCount = 0;
+        int failureCount = 0;
+        List<String> errors = new ArrayList<>();
+
+        for (BulkUpdateColumnMappingRequest request : updateRequests) {
+            try {
+                ExcelColumnMapping existingMapping = columnMappingRepository.findById(request.getMappingId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Excel column mapping not found with id: " + request.getMappingId()));
+
+                ExcelColumnMapping mappingModified = existingMapping.toBuilder()
+                        .excelHeader(request.getExcelHeader())
+                        .required(request.getRequired())
+                        .build();
+
+                columnMappingRepository.save(mappingModified);
+                successCount++;
+            } catch (Exception e) {
+                failureCount++;
+                String errorMsg = String.format("Failed to update mapping with id %d: %s", request.getMappingId(), e.getMessage());
+                errors.add(errorMsg);
+                log.error(errorMsg, e);
+            }
+        }
+
+        return ProcessingResult.builder()
+                .success(failureCount == 0)
+                .totalProcessed(updateRequests.size())
+                .successCount(successCount)
+                .failureCount(failureCount)
+                .errors(errors)
+                .build();
+
     }
 
     public Map<String, String> getHeaderToFieldMapping(String fileType) {

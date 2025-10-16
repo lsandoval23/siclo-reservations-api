@@ -30,7 +30,7 @@ import java.util.function.Function;
 @Service
 public class ExcelProcessingService implements FileProcessingService {
 
-    public static Integer MAX_ITEMS_IN_BATCH = 1000;
+    public static Integer MAX_ITEMS_IN_BATCH = 100;
 
     private final StreamingExcelParser streamingParser;
     private final EntityCacheService entityCacheService;
@@ -83,10 +83,10 @@ public class ExcelProcessingService implements FileProcessingService {
 
             ProcessingResult batchProcessingResult = ProcessingResult.builder()
                     .success(batchResults.stream().allMatch(ProcessingResult::isSuccess))
-                    .totalRows(batchResults.stream().mapToInt(ProcessingResult::getTotalRows).sum())
-                    .processedRows(batchResults.stream().mapToInt(ProcessingResult::getProcessedRows).sum())
-                    .skippedRows(batchResults.stream().mapToInt(ProcessingResult::getSkippedRows).sum())
-                    .errorRows(batchResults.stream().mapToInt(ProcessingResult::getErrorRows).sum())
+                    .totalProcessed(batchResults.stream().mapToInt(ProcessingResult::getTotalProcessed).sum())
+                    .successCount(batchResults.stream().mapToInt(ProcessingResult::getSuccessCount).sum())
+                    .skipped(batchResults.stream().mapToInt(ProcessingResult::getSkipped).sum())
+                    .failureCount(batchResults.stream().mapToInt(ProcessingResult::getFailureCount).sum())
                     .errors(batchResults.stream().flatMap(r -> r.getErrors().stream()).toList())
                     .build();
 
@@ -97,10 +97,10 @@ public class ExcelProcessingService implements FileProcessingService {
             FileJobUpdateRequest updateRequest = FileJobUpdateRequest.builder()
                     .status(jobStatus)
                     .finishedAt(LocalDateTime.now())
-                    .totalRecords(batchProcessingResult.getTotalRows())
-                    .processedRecords(batchProcessingResult.getProcessedRows())
-                    .skippedRecords(batchProcessingResult.getSkippedRows())
-                    .errorRecords(batchProcessingResult.getErrorRows())
+                    .totalRecords(batchProcessingResult.getTotalProcessed())
+                    .processedRecords(batchProcessingResult.getSuccessCount())
+                    .skippedRecords(batchProcessingResult.getSkipped())
+                    .errorRecords(batchProcessingResult.getFailureCount())
                     .processingResult(objectMapper.writeValueAsString(batchProcessingResult))
                     .build();
 
