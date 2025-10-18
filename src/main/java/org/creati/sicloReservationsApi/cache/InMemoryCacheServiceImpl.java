@@ -4,9 +4,11 @@ import org.creati.sicloReservationsApi.cache.model.EntityCache;
 import org.creati.sicloReservationsApi.dao.postgre.ClientRepository;
 import org.creati.sicloReservationsApi.dao.postgre.DisciplineRepository;
 import org.creati.sicloReservationsApi.dao.postgre.InstructorRepository;
+import org.creati.sicloReservationsApi.dao.postgre.PaymentTransactionRepository;
 import org.creati.sicloReservationsApi.dao.postgre.ReservationRepository;
 import org.creati.sicloReservationsApi.dao.postgre.RoomRepository;
 import org.creati.sicloReservationsApi.dao.postgre.StudioRepository;
+import org.creati.sicloReservationsApi.dao.postgre.model.PaymentTransaction;
 import org.creati.sicloReservationsApi.dao.postgre.model.Reservation;
 import org.creati.sicloReservationsApi.service.model.PaymentDto;
 import org.creati.sicloReservationsApi.service.model.ReservationDto;
@@ -25,14 +27,23 @@ public class InMemoryCacheServiceImpl implements EntityCacheService {
     private final InstructorRepository instructorRepository;
     private final RoomRepository roomRepository;
     private final ReservationRepository reservationRepository;
+    private final PaymentTransactionRepository paymentRepository;
 
-    public InMemoryCacheServiceImpl(ClientRepository clientRepository, StudioRepository studioRepository, DisciplineRepository disciplineRepository, InstructorRepository instructorRepository, RoomRepository roomRepository, ReservationRepository reservationRepository) {
+    public InMemoryCacheServiceImpl(
+            final ClientRepository clientRepository,
+            final StudioRepository studioRepository,
+            final DisciplineRepository disciplineRepository,
+            final InstructorRepository instructorRepository,
+            final RoomRepository roomRepository,
+            final ReservationRepository reservationRepository,
+            final PaymentTransactionRepository paymentRepository) {
         this.clientRepository = clientRepository;
         this.studioRepository = studioRepository;
         this.disciplineRepository = disciplineRepository;
         this.instructorRepository = instructorRepository;
         this.roomRepository = roomRepository;
         this.reservationRepository = reservationRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     @Override
@@ -104,6 +115,16 @@ public class InMemoryCacheServiceImpl implements EntityCacheService {
     public EntityCache preloadEntitiesForPayments(List<PaymentDto> payments) {
 
         EntityCache entityCache = new EntityCache();
+
+        // Preload payment operation IDs
+        Set<Long> operationIds = payments.stream()
+                .map(PaymentDto::getOperationId)
+                .collect(Collectors.toSet());
+        entityCache.getExistingOperationIds().addAll(paymentRepository.findAllById(operationIds)
+                .stream()
+                .map(PaymentTransaction::getOperationId)
+                .collect(Collectors.toSet()));
+
 
         // Preload clients by email
         Set<String> clientEmails = payments.stream()

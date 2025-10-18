@@ -16,7 +16,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -28,9 +27,8 @@ import java.time.LocalDateTime;
 public class PaymentTransaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "transaction_id")
-    private Long transactionId;
+    @Column(name = "operation_id", unique = true)
+    private Long operationId;
 
     @Column(name = "month")
     private Integer month;

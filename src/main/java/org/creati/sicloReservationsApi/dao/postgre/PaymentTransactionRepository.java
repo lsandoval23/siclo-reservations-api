@@ -13,6 +13,7 @@ public interface PaymentTransactionRepository extends BaseRepository<PaymentTran
 
     @Query("""
                 SELECT new org.creati.sicloReservationsApi.service.model.PaymentTableDto(
+                    p.operationId,
                     p.month,
                     p.day,
                     p.week,

@@ -30,7 +30,7 @@ import java.util.function.Function;
 @Service
 public class ExcelProcessingService implements FileProcessingService {
 
-    public static Integer MAX_ITEMS_IN_BATCH = 100;
+    public static Integer MAX_ITEMS_IN_BATCH = 1000;
 
     private final StreamingExcelParser streamingParser;
     private final EntityCacheService entityCacheService;

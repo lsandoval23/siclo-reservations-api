@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record PaymentTableDto(
+        Long operationId,
         Integer month,
         Integer day,
         Integer week,

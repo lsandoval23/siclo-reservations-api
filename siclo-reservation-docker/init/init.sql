@@ -92,7 +92,7 @@ CREATE TABLE reservation (
 -- Payment Transaction Table
 -- ========================
 CREATE TABLE payment_transaction (
-    transaction_id     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    operation_id       BIGINT PRIMARY KEY,
     client_id          BIGINT NOT NULL,
     month              INT,
     day                INT,
@@ -305,6 +305,7 @@ INSERT INTO excel_column_mapping (file_type, field_name, excel_header, required,
 ('PAYMENT', 'clientEmail', 'E-mail de la contraparte (counterpart_email)', true, 'STRING'),
 ('PAYMENT', 'phone', 'Teléfono de la contraparte (counterpart_phone_number)', false, 'STRING'),
 ('PAYMENT', 'documentId', 'Documento de la contraparte (buyer_document)', false, 'STRING'),
+('PAYMENT', 'operationId', 'Número de operación de Mercado Pago (operation_id)', true, 'LONG'),
 ('PAYMENT', 'operationType', 'Tipo de operación (operation_type)', true, 'STRING'),
 ('PAYMENT', 'productValue', 'Valor del producto (transaction_amount)', true, 'DECIMAL'),
 ('PAYMENT', 'transactionFee', 'Tarifa de Mercado Pago (mercadopago_fee)', true, 'DECIMAL'),

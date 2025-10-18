@@ -15,12 +15,12 @@ import java.util.Set;
 @Data
 public class EntityCache {
 
-
     private Map<String, Client> clientsByEmail = new HashMap<>();
     private Map<String, Studio> studiosByName = new HashMap<>();
     private Map<String, Room> roomsByStudioAndName = new HashMap<>();
     private Map<String, Discipline> disciplinesByName = new HashMap<>();
     private Map<String, Instructor> instructorsByName = new HashMap<>();
     private Set<Long> existingReservationIds = new HashSet<>();
+    private Set<Long> existingOperationIds = new HashSet<>();
 
 }

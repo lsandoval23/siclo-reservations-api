@@ -112,6 +112,12 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
         for (int i = 0; i < paymentDtoList.size(); i++) {
             PaymentDto payment = paymentDtoList.get(i);
             try {
+                if (cache.getExistingOperationIds().contains(payment.getOperationId())) {
+                    log.warn("Skipping existing operation ID: {}", payment.getOperationId());
+                    skippedRows++;
+                    continue;
+                }
+
                 PaymentTransaction paymentEntity = buildPaymentEntity(payment, cache);
                 paymentsToSave.add(paymentEntity);
                 processedRows++;
@@ -213,6 +219,7 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
         });
 
         return PaymentTransaction.builder()
+                .operationId(dto.getOperationId())
                 .month(dto.getMonth())
                 .day(dto.getDay())
                 .week(dto.getWeek())
