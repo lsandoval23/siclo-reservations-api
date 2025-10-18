@@ -7,6 +7,7 @@ import org.creati.sicloReservationsApi.service.model.ColumnMappingDto;
 import org.creati.sicloReservationsApi.service.model.ProcessingResult;
 import org.creati.sicloReservationsApi.service.model.UpdateColumnMappingRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,6 +19,7 @@ import java.util.List;
 
 
 @RestController
+@PreAuthorize("hasAuthority('FILE_UPLOAD')")
 @RequestMapping("/column-mapping")
 public class ColumnMappingController {
 

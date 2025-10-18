@@ -152,6 +152,8 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
             log.info("Creating new studio for name: {}", name);
             Studio studio = Studio.builder()
                     .name(name)
+                    .country(dto.getCountry())
+                    .city(dto.getCity())
                     .build();
             return studioRepository.save(studio);
         });

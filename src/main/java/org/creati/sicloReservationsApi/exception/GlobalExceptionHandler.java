@@ -1,6 +1,7 @@
 package org.creati.sicloReservationsApi.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.creati.sicloReservationsApi.auth.dto.ErrorResponse;
 import org.creati.sicloReservationsApi.auth.exception.DuplicateResourceException;
@@ -120,6 +121,25 @@ public class GlobalExceptionHandler {
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(
+            ConstraintViolationException ex, HttpServletRequest request) {
+
+        String errorMessage = ex.getConstraintViolations().stream()
+                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                .reduce((msg1, msg2) -> msg1 + "; " + msg2)
+                .orElse(ex.getMessage());
+
+        ErrorResponse error = ErrorResponse.builder()
+                .code("INVALID_FIELD_ERROR")
+                .message(errorMessage)
+                .path(request.getRequestURI())
+                .timestamp(Instant.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(

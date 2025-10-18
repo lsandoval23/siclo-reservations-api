@@ -1,11 +1,10 @@
 package org.creati.sicloReservationsApi.web;
 
+
 import jakarta.validation.constraints.Min;
 import org.creati.sicloReservationsApi.service.ReportService;
-import org.creati.sicloReservationsApi.service.impl.ReportServiceImpl;
 import org.creati.sicloReservationsApi.service.model.PagedResponse;
-import org.creati.sicloReservationsApi.service.model.ReservationReportDto;
-import org.creati.sicloReservationsApi.service.model.ReservationTableDto;
+import org.creati.sicloReservationsApi.service.model.PaymentTableDto;
 import org.creati.sicloReservationsApi.service.model.SortDirection;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -21,31 +20,18 @@ import java.time.LocalDate;
 @Validated
 @RestController
 @PreAuthorize("hasAuthority('REPORT_VIEW')")
-@RequestMapping("/reports/reservations")
-public class ReservationReportsController {
+@RequestMapping("/reports/payments")
+public class PaymentReportsController {
 
     private final ReportService reportService;
 
-    public ReservationReportsController(ReportServiceImpl reportService) {
+    public PaymentReportsController(ReportService reportService) {
         this.reportService = reportService;
-    }
-
-    @GetMapping("")
-    public ReservationReportDto getReservationReport(
-            @RequestParam String groupBy,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(defaultValue = "day") String timeUnit
-    ) {
-        if (!from.isBefore(to)) {
-            throw new IllegalArgumentException("From date must be before To date");
-        }
-        return reportService.getGroupedReport(ReservationReportDto.GroupBy.fromValue(groupBy), from, to, timeUnit);
     }
 
 
     @GetMapping("/table")
-    public ResponseEntity<PagedResponse<ReservationTableDto>> getReservationTable(
+    public ResponseEntity<PagedResponse<PaymentTableDto>> getPaymentTable(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @Min(value = 0, message = "Page number must be 0 or greater")
@@ -60,20 +46,11 @@ public class ReservationReportsController {
         }
 
         return ResponseEntity.ok().body(
-                reportService.getReservationTable(
+                reportService.getPaymentTable(
                         from, to, page, size,
-                        ReservationTableDto.ReservationSortField.fromValue(sortBy),
-                        SortDirection.fromValue(sortDir)));
+                        PaymentTableDto.PaymentSortFiled.fromValue(sortBy),
+                        SortDirection.fromValue(sortDir)
+                )
+        );
     }
-
-
-
-
-
-
-
-
-
-
-
 }

@@ -1,12 +1,13 @@
 package org.creati.sicloReservationsApi.service.impl;
 
+import org.creati.sicloReservationsApi.dao.postgre.PaymentTransactionRepository;
 import org.creati.sicloReservationsApi.dao.postgre.ReservationRepository;
 import org.creati.sicloReservationsApi.dao.postgre.dto.ReservationReportProjection;
 import org.creati.sicloReservationsApi.service.ReportService;
 import org.creati.sicloReservationsApi.service.model.PagedResponse;
+import org.creati.sicloReservationsApi.service.model.PaymentTableDto;
 import org.creati.sicloReservationsApi.service.model.ReservationReportDto;
 import org.creati.sicloReservationsApi.service.model.ReservationSeriesDto;
-import org.creati.sicloReservationsApi.service.model.ReservationSortField;
 import org.creati.sicloReservationsApi.service.model.ReservationTableDto;
 import org.creati.sicloReservationsApi.service.model.SortDirection;
 import org.springframework.data.domain.Page;
@@ -24,9 +25,13 @@ import java.util.stream.Collectors;
 public class ReportServiceImpl implements ReportService {
 
     private final ReservationRepository reservationRepository;
+    private final PaymentTransactionRepository paymentRepository;
 
-    public ReportServiceImpl(final ReservationRepository reservationRepository) {
+    public ReportServiceImpl(
+            final ReservationRepository reservationRepository,
+            final PaymentTransactionRepository paymentRepository) {
         this.reservationRepository = reservationRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     @Override
@@ -65,7 +70,7 @@ public class ReportServiceImpl implements ReportService {
     public PagedResponse<ReservationTableDto> getReservationTable(
             LocalDate from, LocalDate to,
             int page, int size,
-            ReservationSortField sortBy, SortDirection sortDir) {
+            ReservationTableDto.ReservationSortField sortBy, SortDirection sortDir) {
 
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir.getValue()), sortBy.getFieldName());
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -80,5 +85,25 @@ public class ReportServiceImpl implements ReportService {
                 pageResponse.isLast()
         );
     }
+
+    @Override
+    public PagedResponse<PaymentTableDto> getPaymentTable(
+            LocalDate from, LocalDate to,
+            int page, int size,
+            PaymentTableDto.PaymentSortFiled sortBy, SortDirection sortDir) {
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir.getValue()), sortBy.getFieldName());
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<PaymentTableDto> pageResponse = paymentRepository.getPaymentTable(pageable);
+        return new PagedResponse<>(
+                pageResponse.getContent(),
+                pageResponse.getNumber(),
+                pageResponse.getSize(),
+                pageResponse.getTotalElements(),
+                pageResponse.getTotalPages(),
+                pageResponse.isLast()
+        );
+    }
+
 
 }

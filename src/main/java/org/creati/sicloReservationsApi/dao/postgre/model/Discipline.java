@@ -32,6 +32,4 @@ public class Discipline {
     @Column(name = "name", nullable = false, unique = true, length = 100)
     private String name;
 
-    @OneToMany(mappedBy = "discipline", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Reservation> reservations;
 }
