@@ -113,7 +113,7 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
             PaymentDto payment = paymentDtoList.get(i);
             try {
                 if (cache.getExistingOperationIds().contains(payment.getOperationId())) {
-                    log.warn("Skipping existing operation ID: {}", payment.getOperationId());
+                    log.debug("Skipping existing operation ID: {}", payment.getOperationId());
                     skippedRows++;
                     continue;
                 }

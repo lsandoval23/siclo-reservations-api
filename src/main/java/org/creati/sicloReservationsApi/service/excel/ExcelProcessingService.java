@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.BiConsumer;
 
 @Slf4j
 @Service
@@ -74,11 +74,7 @@ public class ExcelProcessingService implements FileProcessingService {
                     fileType.name(),
                     strategy.dtoClass(),
                     MAX_ITEMS_IN_BATCH,
-                    (batch) -> {
-                        ProcessingResult batchResult = strategy.persist(batch);
-                        batchResults.add(batchResult);
-                        log.info("Processed batch of {} payments. Result: {}", batch.size(), batchResult);
-                    },
+                    (batch) -> strategy.persist(batch, batchResults),
                     strategy.extraParam());
 
             ProcessingResult batchProcessingResult = ProcessingResult.builder()
@@ -143,17 +139,21 @@ public class ExcelProcessingService implements FileProcessingService {
         Map<FileType, FileProcessingStrategy<?>> strategyMap = Map.of(
                 FileType.RESERVATION, new FileProcessingStrategy<>(
                         ReservationDto.class,
-                        (batch) -> {
+                        (batch, batchResults) -> {
                             EntityCache cache = entityCacheService.preloadEntitiesForReservation(batch);
-                            return batchPersistenceService.persistReservationsBatch(batch, cache);
+                            ProcessingResult batchResult = batchPersistenceService.persistReservationsBatch(batch, cache);
+                            batchResults.add(batchResult);
+                            log.info("Processed batch of {} reservations. Result: {}", batch.size(), batchResult);
                         },
                         null
                 ),
                 FileType.PAYMENT, new FileProcessingStrategy<>(
                         PaymentDto.class,
-                        (batch) -> {
+                        (batch, batchResults) -> {
                             EntityCache cache = entityCacheService.preloadEntitiesForPayments(batch);
-                            return batchPersistenceService.persistPaymentsBatch(batch, cache);
+                            ProcessingResult batchResult =  batchPersistenceService.persistPaymentsBatch(batch, cache);
+                            batchResults.add(batchResult);
+                            log.info("Processed batch of {} payments. Result: {}", batch.size(), batchResult);
                         },
                         "M-pago"
                 )
@@ -169,13 +169,13 @@ public class ExcelProcessingService implements FileProcessingService {
 
     public record FileProcessingStrategy<T>(
             Class<T> dtoClass,
-            Function<List<T>, ProcessingResult> persistFunction,
+            BiConsumer<List<T>, List<ProcessingResult>> persistFunction,
             String extraParam) {
 
-        public ProcessingResult persist(List<?> batch) {
+        public void persist(List<?> batch, List<ProcessingResult> batchResults) {
             @SuppressWarnings("unchecked")
             List<T> typedBatch = (List<T>) batch;
-            return persistFunction.apply(typedBatch);
+            persistFunction.accept(typedBatch, batchResults);
         }
     }
 
