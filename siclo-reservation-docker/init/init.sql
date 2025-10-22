@@ -256,6 +256,64 @@ GROUP BY group_name, r.reservation_date
 ORDER BY group_name, r.reservation_date;
 $$;
 
+
+CREATE OR REPLACE FUNCTION get_clients_reservations_payments(
+    start_date DATE,
+    end_date DATE,
+    client_id_param BIGINT DEFAULT NULL
+)
+RETURNS TABLE (
+    client_id BIGINT,
+    client_name VARCHAR,
+    client_email VARCHAR,
+    client_phone VARCHAR,
+    total_reservations INT,
+    total_payments INT,
+    total_amount_received NUMERIC(12,2),
+    last_payment_date TIMESTAMP,
+    last_reservation_date DATE,
+    top_discipline VARCHAR
+)
+LANGUAGE sql
+AS $$
+    WITH top_discipline_per_client AS (
+        SELECT DISTINCT ON (r.client_id)
+            r.client_id,
+            d.name AS top_discipline,
+            COUNT(r.reservation_id) AS top_discipline_count
+        FROM reservation r
+        JOIN discipline d ON d.discipline_id = r.discipline_id
+        WHERE r.reservation_date BETWEEN start_date AND end_date
+        GROUP BY r.client_id, d.name
+        ORDER BY r.client_id, COUNT(r.reservation_id) DESC
+    )
+    SELECT
+        c.client_id,
+        c.name AS client_name,
+        c.email AS client_email,
+		c.phone AS client_phone,
+        COUNT(DISTINCT r.reservation_id) AS total_reservations,
+        COUNT(DISTINCT p.operation_id) AS total_payments,
+        COALESCE(SUM(p.amount_received), 0) AS total_amount_received,
+        MAX(p.purchase_date) AS last_payment_date,
+        MAX(r.reservation_date) AS last_reservation_date,
+        td.top_discipline
+    FROM client c
+    LEFT JOIN reservation r
+        ON c.client_id = r.client_id
+        AND r.reservation_date BETWEEN start_date AND end_date
+    LEFT JOIN payment_transaction p
+        ON c.client_id = p.client_id
+        AND p.purchase_date BETWEEN start_date AND end_date
+    LEFT JOIN top_discipline_per_client td
+        ON c.client_id = td.client_id
+    WHERE client_id_param IS NULL OR c.client_id = client_id_param
+    GROUP BY c.client_id, c.name, c.email, td.top_discipline, td.top_discipline_count
+    ORDER BY c.name;
+$$;
+
+
+
 -- ========================
 -- Add start items
 -- ========================
