@@ -1,9 +1,12 @@
 package org.creati.sicloReservationsApi.service.impl;
 
+import org.creati.sicloReservationsApi.dao.postgre.ClientRepository;
 import org.creati.sicloReservationsApi.dao.postgre.PaymentTransactionRepository;
 import org.creati.sicloReservationsApi.dao.postgre.ReservationRepository;
+import org.creati.sicloReservationsApi.dao.postgre.dto.ClientReservationsPaymentsProjection;
 import org.creati.sicloReservationsApi.dao.postgre.dto.ReservationReportProjection;
 import org.creati.sicloReservationsApi.service.ReportService;
+import org.creati.sicloReservationsApi.service.model.ClientReservationsPaymentsDto;
 import org.creati.sicloReservationsApi.service.model.PagedResponse;
 import org.creati.sicloReservationsApi.service.model.PaymentTableDto;
 import org.creati.sicloReservationsApi.service.model.ReservationReportDto;
@@ -14,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,16 +30,19 @@ public class ReportServiceImpl implements ReportService {
 
     private final ReservationRepository reservationRepository;
     private final PaymentTransactionRepository paymentRepository;
+    private final ClientRepository clientRepository;
 
     public ReportServiceImpl(
             final ReservationRepository reservationRepository,
-            final PaymentTransactionRepository paymentRepository) {
+            final PaymentTransactionRepository paymentRepository,
+            final ClientRepository clientRepository) {
         this.reservationRepository = reservationRepository;
         this.paymentRepository = paymentRepository;
+        this.clientRepository = clientRepository;
     }
 
     @Override
-    public ReservationReportDto getGroupedReport(ReservationReportDto.GroupBy groupBy, LocalDate from, LocalDate to, String timeUnit) {
+    public ReservationReportDto getReservationGroupedReport(ReservationReportDto.GroupBy groupBy, LocalDate from, LocalDate to, String timeUnit) {
 
         // TODO Add timeUnit handling (week, month, etc.)
         List<ReservationReportProjection> rows = reservationRepository.getReservationsReportByDay(groupBy.getFieldName(), from, to);
@@ -103,6 +110,26 @@ public class ReportServiceImpl implements ReportService {
                 pageResponse.getTotalPages(),
                 pageResponse.isLast()
         );
+    }
+
+    @Override
+    public List<ClientReservationsPaymentsDto> getClientReservationsPayments(LocalDate from, LocalDate to, @Nullable Long clientId) {
+        List<ClientReservationsPaymentsProjection> rows = clientRepository.getClientReservationsPayments(from, to, clientId);
+        return rows.stream()
+                .map(rowItem -> new ClientReservationsPaymentsDto(
+                        new ClientReservationsPaymentsDto.ClientInfo(
+                                rowItem.getClientId(),
+                                rowItem.getClientName(),
+                                rowItem.getClientEmail(),
+                                rowItem.getClientPhone()),
+                        rowItem.getTotalReservations(),
+                        rowItem.getTotalPayments(),
+                        rowItem.getTotalAmountReceived(),
+                        rowItem.getLastPaymentDate(),
+                        rowItem.getLastReservationDate(),
+                        rowItem.getTopDiscipline()
+                ))
+                .toList();
     }
 
 

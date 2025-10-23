@@ -40,7 +40,7 @@ public class ReservationReportsController {
         if (!from.isBefore(to)) {
             throw new IllegalArgumentException("From date must be before To date");
         }
-        return reportService.getGroupedReport(ReservationReportDto.GroupBy.fromValue(groupBy), from, to, timeUnit);
+        return reportService.getReservationGroupedReport(ReservationReportDto.GroupBy.fromValue(groupBy), from, to, timeUnit);
     }
 
 
