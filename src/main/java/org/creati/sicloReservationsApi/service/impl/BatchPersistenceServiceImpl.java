@@ -147,7 +147,7 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
 
     private Reservation buildReservationEntity(ReservationDto dto, EntityCache cache) {
         Client newClient = cache.getClientsByEmail().computeIfAbsent(dto.getClientEmail(), email -> {
-            log.info("Creating new client for email: {}", email);
+            log.debug("Creating new client for email: {}", email);
             Client client = Client.builder()
                     .email(email)
                     .build();
@@ -155,7 +155,7 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
         });
 
         Studio newStudio = cache.getStudiosByName().computeIfAbsent(dto.getStudioName(), name -> {
-            log.info("Creating new studio for name: {}", name);
+            log.debug("Creating new studio for name: {}", name);
             Studio studio = Studio.builder()
                     .name(name)
                     .country(dto.getCountry())
@@ -166,7 +166,7 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
 
         String roomKey = newStudio.getName() + "|" + dto.getRoomName();
         Room newRoom = cache.getRoomsByStudioAndName().computeIfAbsent(roomKey, key -> {
-            log.info("Creating new room: {} for studio: {}", dto.getRoomName(), newStudio.getStudioId());
+            log.debug("Creating new room: {} for studio: {}", dto.getRoomName(), newStudio.getStudioId());
             Room room = Room.builder()
                     .name(dto.getRoomName())
                     .studio(newStudio)
@@ -175,7 +175,7 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
         });
 
         Discipline newDiscipline = cache.getDisciplinesByName().computeIfAbsent(dto.getDisciplineName(), name -> {
-            log.info("Creating new discipline for name: {}", name);
+            log.debug("Creating new discipline for name: {}", name);
             Discipline discipline = Discipline.builder()
                     .name(name)
                     .build();
@@ -183,7 +183,7 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
         });
 
         Instructor newInstructor = cache.getInstructorsByName().computeIfAbsent(dto.getInstructorName(), name -> {
-            log.info("Creating new instructor for name: {}", name);
+            log.debug("Creating new instructor for name: {}", name);
             Instructor instructor = Instructor.builder()
                     .name(name)
                     .build();
@@ -209,7 +209,7 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
     private PaymentTransaction buildPaymentEntity(PaymentDto dto, EntityCache cache) {
 
         Client newClient = cache.getClientsByEmail().computeIfAbsent(dto.getClientEmail(), email -> {
-            log.info("Creating new client for email: {}", email);
+            log.debug("Creating new client for email: {}", email);
             Client client = Client.builder()
                     .phone(dto.getPhone())
                     .documentId(dto.getDocumentId())

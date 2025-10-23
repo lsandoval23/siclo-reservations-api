@@ -45,7 +45,7 @@ public class StreamingExcelParser {
             Consumer<List<T>> batchProcessor,
             @Nullable String sheetName) throws IOException, IllegalArgumentException, FileProcessingException {
 
-        try (Workbook workbook = ExcelUtils.createWorkbook(file)) {
+        try (Workbook workbook = ExcelUtils.createStreamingWorkbook(file)) {
 
             Map<String, String> headerToFieldMap = columnMappingService.getHeaderToFieldMapping(fileType);
             Sheet sheet = Optional.ofNullable(sheetName)

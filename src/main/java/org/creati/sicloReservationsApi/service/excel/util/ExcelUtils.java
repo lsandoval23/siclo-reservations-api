@@ -1,5 +1,6 @@
 package org.creati.sicloReservationsApi.service.excel.util;
 
+import com.monitorjbl.xlsx.StreamingReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -12,6 +13,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -57,6 +59,41 @@ public class ExcelUtils {
             case "xls"  -> new HSSFWorkbook(new FileInputStream(file));
             default     -> throw new IllegalArgumentException("The provided file is not a valid Excel file: " + extension);
         };
+    }
+
+    public static Workbook createStreamingWorkbook(File file) throws IOException {
+        String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1).toLowerCase();
+        if (!"xlsx".equals(extension)) {
+            throw new IllegalArgumentException("StreamingReader only supports .xlsx files");
+        }
+
+        InputStream is = new FileInputStream(file);
+        return StreamingReader.builder()
+                .rowCacheSize(100)
+                .bufferSize(4096)
+                .open(is);
+    }
+
+
+    public static String getBaseName(String filename) {
+        if (filename == null) return null;
+        int lastSeparator = Math.max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
+        int lastDot = filename.lastIndexOf('.');
+        if (lastDot == -1 || lastDot < lastSeparator) {
+            return filename.substring(lastSeparator + 1);
+        }
+        return filename.substring(lastSeparator + 1, lastDot);
+    }
+
+
+    public static String getExtension(String filename) {
+        if (filename == null) return null;
+        int lastSeparator = Math.max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
+        int lastDot = filename.lastIndexOf('.');
+        if (lastDot == -1 || lastDot < lastSeparator) {
+            return ""; // no extension
+        }
+        return filename.substring(lastDot + 1);
     }
 
     public static boolean isEmptyRow(Row row) {

@@ -2,10 +2,10 @@ package org.creati.sicloReservationsApi.web;
 
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
 import org.creati.sicloReservationsApi.dao.postgre.model.FileJob;
 import org.creati.sicloReservationsApi.service.FileJobService;
 import org.creati.sicloReservationsApi.service.FileProcessingService;
+import org.creati.sicloReservationsApi.service.excel.util.ExcelUtils;
 import org.creati.sicloReservationsApi.service.model.FileJobCreateRequest;
 import org.creati.sicloReservationsApi.service.model.FileType;
 import org.springframework.http.HttpStatus;
@@ -53,15 +53,15 @@ public class FileUploadController {
                     .orElseThrow(() -> new IllegalArgumentException("Filename is null"));
 
             Path tempFilePath = Files.createTempFile(
-                    String.format("%s-%s", FilenameUtils.getBaseName(filename), UUID.randomUUID()),
-                    "." + FilenameUtils.getExtension(filename).toLowerCase());
+                    String.format("%s-%s", ExcelUtils.getBaseName(filename), UUID.randomUUID()),
+                    "." + ExcelUtils.getExtension(filename).toLowerCase());
             fileContent.transferTo(tempFilePath);
             File tempFile = tempFilePath.toFile();
 
             // Start job tracking in DB
             FileJob createdJob = fileJobService.createFileJob(FileJobCreateRequest.builder()
                     .fileName(tempFile.getName())
-                    .fileExtension(FilenameUtils.getExtension(filename).toLowerCase())
+                    .fileExtension(ExcelUtils.getExtension(filename).toLowerCase())
                     .fileType(FileType.RESERVATION)
                     .build());
 
@@ -88,15 +88,15 @@ public class FileUploadController {
                     .orElseThrow(() -> new IllegalArgumentException("Filename is null"));
 
             Path tempFilePath = Files.createTempFile(
-                    String.format("%s-%s", FilenameUtils.getBaseName(filename), UUID.randomUUID()),
-                    "." + FilenameUtils.getExtension(filename).toLowerCase());
+                    String.format("%s-%s", ExcelUtils.getBaseName(filename), UUID.randomUUID()),
+                    "." + ExcelUtils.getExtension(filename).toLowerCase());
             fileContent.transferTo(tempFilePath);
             File tempFile = tempFilePath.toFile();
 
             // Start job tracking in DB
             FileJob createdJob = fileJobService.createFileJob(FileJobCreateRequest.builder()
                     .fileName(tempFile.getName())
-                    .fileExtension(FilenameUtils.getExtension(filename).toLowerCase())
+                    .fileExtension(ExcelUtils.getExtension(filename).toLowerCase())
                     .fileType(FileType.PAYMENT)
                     .build());
 
