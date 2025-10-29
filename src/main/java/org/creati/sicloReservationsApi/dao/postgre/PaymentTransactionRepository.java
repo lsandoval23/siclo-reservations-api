@@ -9,7 +9,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface PaymentTransactionRepository extends BaseRepository<PaymentTransaction, Long> {
@@ -46,5 +48,18 @@ public interface PaymentTransactionRepository extends BaseRepository<PaymentTran
             @Param("toDate") LocalDateTime toDate,
             Pageable pageable
     );
+
+
+    @Query("""
+                SELECT new org.creati.sicloReservationsApi.service.model.PaymentTableDto$PaymentTableSummary(
+                    p.status,
+                    COUNT(p),
+                    SUM(p.amountReceived)
+                )
+                FROM PaymentTransaction p
+                WHERE p.purchaseDate >= :fromDate AND p.purchaseDate <= :toDate
+                GROUP BY p.status
+            """)
+    List<PaymentTableDto.PaymentTableSummary> getPaymentSummary(@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
 
 }

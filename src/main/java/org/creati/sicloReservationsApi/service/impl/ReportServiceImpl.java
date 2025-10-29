@@ -21,9 +21,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -130,12 +132,31 @@ public class ReportServiceImpl implements ReportService {
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<PaymentTableDto> pageResponse = paymentRepository.getPaymentTable(
                 LocalDateTime.of(from, LocalTime.MIN),
-                LocalDateTime.of(to, LocalTime.MIN),
+                LocalDateTime.of(to, LocalTime.MAX),
                 pageable);
+
+        List<PaymentTableDto.PaymentTableSummary> summaryList = paymentRepository.getPaymentSummary(
+                LocalDateTime.of(from, LocalTime.MIN),
+                LocalDateTime.of(to, LocalTime.MAX));
+
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        Map<String, Long> operationCounts = new HashMap<>();
+
+        for (PaymentTableDto.PaymentTableSummary summary : summaryList) {
+            operationCounts.put(summary.status(), summary.count());
+            if (summary.totalAmount() != null) {
+                totalAmount = totalAmount.add(summary.totalAmount());
+            }
+        }
+
+        Map<String, Object> summary = Map.of(
+                "totalAmountReceived", totalAmount,
+                "operationSummary", operationCounts
+        );
 
 
         return new PagedResponse<>(
-                null,
+                summary,
                 pageResponse.getContent(),
                 pageResponse.getNumber(),
                 pageResponse.getSize(),

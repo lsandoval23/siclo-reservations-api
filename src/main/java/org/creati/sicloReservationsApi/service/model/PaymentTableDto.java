@@ -31,6 +31,12 @@ public record PaymentTableDto(
     ) {
     }
 
+    public record PaymentTableSummary(
+            String status,
+            Long count,
+            BigDecimal totalAmount
+    ){}
+
 
     @Getter
     public enum PaymentSortFiled {
