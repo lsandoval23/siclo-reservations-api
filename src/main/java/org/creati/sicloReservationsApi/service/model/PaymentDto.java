@@ -27,6 +27,7 @@ public class PaymentDto {
     private String phone;
     private String documentId;
     private Long operationId;
+    private String status;
     private String operationType;
     private BigDecimal productValue;
     private BigDecimal transactionFee;

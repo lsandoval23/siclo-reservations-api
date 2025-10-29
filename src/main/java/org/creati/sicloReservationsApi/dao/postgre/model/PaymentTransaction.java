@@ -48,6 +48,9 @@ public class PaymentTransaction {
     @Column(name = "release_date")
     private LocalDateTime releaseDate;
 
+    @Column(name = "status")
+    private String status;
+
     @Column(name = "operation_type", length = 100)
     private String operationType;
 

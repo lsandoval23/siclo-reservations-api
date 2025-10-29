@@ -226,6 +226,7 @@ public class BatchPersistenceServiceImpl implements BatchPersistenceService {
                 .purchaseDate(dto.getPurchaseDate())
                 .accreditationDate(dto.getAccreditationDate())
                 .releaseDate(dto.getReleaseDate())
+                .status(dto.getStatus())
                 .operationType(dto.getOperationType())
                 .productValue(dto.getProductValue())
                 .transactionFee(dto.getTransactionFee())
