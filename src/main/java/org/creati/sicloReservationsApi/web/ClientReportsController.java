@@ -2,7 +2,6 @@ package org.creati.sicloReservationsApi.web;
 
 import org.creati.sicloReservationsApi.service.ReportService;
 import org.creati.sicloReservationsApi.service.model.ClientReservationsPaymentsDto;
-import org.creati.sicloReservationsApi.service.model.ReservationReportDto;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;

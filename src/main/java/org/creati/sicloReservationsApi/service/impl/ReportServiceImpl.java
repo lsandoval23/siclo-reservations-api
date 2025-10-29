@@ -1,5 +1,6 @@
 package org.creati.sicloReservationsApi.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.creati.sicloReservationsApi.dao.postgre.ClientRepository;
 import org.creati.sicloReservationsApi.dao.postgre.PaymentTransactionRepository;
 import org.creati.sicloReservationsApi.dao.postgre.ReservationRepository;
@@ -21,10 +22,13 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ReportServiceImpl implements ReportService {
 
@@ -81,9 +85,32 @@ public class ReportServiceImpl implements ReportService {
 
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir.getValue()), sortBy.getFieldName());
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<ReservationTableDto> pageResponse = reservationRepository.getReservationTable(pageable);
+        Page<ReservationTableDto> pageResponse = reservationRepository.getReservationTable(from, to, pageable);
+
+        // Build summary
+        List<ReservationTableDto.ReservationTableSummary> summaryList = reservationRepository.getReservationSummary(from, to);
+
+        long totalAccepted = 0;
+        long totalCancelled = 0;
+        long totalPending = 0;
+
+        for (ReservationTableDto.ReservationTableSummary summary : summaryList) {
+            switch (summary.status().toUpperCase()) {
+                case "ACEPTADA" -> totalAccepted = summary.count();
+                default -> log.warn("Unknow status: {}", summary.status());
+            }
+        }
+
+        long totalClasses = totalAccepted + totalCancelled + totalPending;
+        Map<String, Object> summary = Map.of(
+                "totalClasses", totalClasses,
+                "accepted", totalAccepted,
+                "cancelled", totalCancelled,
+                "pending", totalPending
+        );
 
         return new PagedResponse<>(
+                summary,
                 pageResponse.getContent(),
                 pageResponse.getNumber(),
                 pageResponse.getSize(),
@@ -101,8 +128,14 @@ public class ReportServiceImpl implements ReportService {
 
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir.getValue()), sortBy.getFieldName());
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<PaymentTableDto> pageResponse = paymentRepository.getPaymentTable(pageable);
+        Page<PaymentTableDto> pageResponse = paymentRepository.getPaymentTable(
+                LocalDateTime.of(from, LocalTime.MIN),
+                LocalDateTime.of(to, LocalTime.MIN),
+                pageable);
+
+
         return new PagedResponse<>(
+                null,
                 pageResponse.getContent(),
                 pageResponse.getNumber(),
                 pageResponse.getSize(),

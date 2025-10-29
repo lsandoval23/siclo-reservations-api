@@ -13,6 +13,7 @@ import java.util.List;
 @Repository
 public interface ClientRepository extends BaseRepository<Client, Long> {
 
+    // clientId can be null to get for all clients
     @Query(value = "SELECT * FROM get_clients_reservations_payments(:fromDate, :toDate, :clientId)", nativeQuery = true)
     List<ClientReservationsPaymentsProjection> getClientReservationsPayments(
             @Param("fromDate") LocalDate fromDate,

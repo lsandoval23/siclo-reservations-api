@@ -6,7 +6,10 @@ import org.creati.sicloReservationsApi.service.model.PaymentTableDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
 
 @Repository
 public interface PaymentTransactionRepository extends BaseRepository<PaymentTransaction, Long> {
@@ -36,7 +39,12 @@ public interface PaymentTransactionRepository extends BaseRepository<PaymentTran
                 )
                 FROM PaymentTransaction p
                 JOIN p.client c
+                WHERE p.purchaseDate >= :fromDate AND p.purchaseDate <= :toDate
             """)
-    Page<PaymentTableDto> getPaymentTable(Pageable pageable);
+    Page<PaymentTableDto> getPaymentTable(
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            Pageable pageable
+    );
 
 }

@@ -52,8 +52,27 @@ public interface ReservationRepository extends BaseRepository<Reservation, Long>
                 JOIN rm.studio s
                 JOIN r.discipline d
                 JOIN r.instructor i
+                WHERE r.reservationDate >= :fromDate AND r.reservationDate <= :toDate
             """)
-    Page<ReservationTableDto> getReservationTable(Pageable pageable);
+    Page<ReservationTableDto> getReservationTable(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            Pageable pageable
+    );
+
+    @Query("""
+                SELECT new org.creati.sicloReservationsApi.service.model.ReservationTableDto$ReservationTableSummary(
+                    r.status,
+                    COUNT(r)
+                )
+                FROM Reservation r
+                WHERE r.reservationDate >= :from AND r.reservationDate <= :to
+                GROUP BY r.status
+            """)
+    List<ReservationTableDto.ReservationTableSummary> getReservationSummary(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
+
+
 
 
 

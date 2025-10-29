@@ -32,6 +32,11 @@ public record ReservationTableDto (
             String city
     ){}
 
+    public record ReservationTableSummary(
+            String status,
+            Long count
+    ){}
+
     @Getter
     public enum ReservationSortField {
 
