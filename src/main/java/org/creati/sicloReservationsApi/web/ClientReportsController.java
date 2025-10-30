@@ -1,11 +1,18 @@
 package org.creati.sicloReservationsApi.web;
 
+import jakarta.validation.constraints.Min;
 import org.creati.sicloReservationsApi.service.ReportService;
 import org.creati.sicloReservationsApi.service.model.ClientReservationsPaymentsDto;
+import org.creati.sicloReservationsApi.service.model.PagedResponse;
+import org.creati.sicloReservationsApi.service.model.PaymentTableDto;
+import org.creati.sicloReservationsApi.service.model.ReservationTableDto;
+import org.creati.sicloReservationsApi.service.model.SortDirection;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,7 +33,7 @@ public class ClientReportsController {
     }
 
     @GetMapping("")
-    public List<ClientReservationsPaymentsDto> getReservationReport(
+    public List<ClientReservationsPaymentsDto> getReservationsPaymentsReport(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) Long clientId
@@ -37,4 +44,57 @@ public class ClientReportsController {
 
         return reportService.getClientReservationsPayments(from, to, clientId);
     }
+
+    @GetMapping("/{clientId}/reservations")
+    public ResponseEntity<PagedResponse<ReservationTableDto>> getReservationTableByClient(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @PathVariable Long clientId,
+            @Min(value = 0, message = "Page number must be 0 or greater")
+            @RequestParam(defaultValue = "0") int page,
+            @Min(value = 1, message = "Page size must be at least 1")
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ) {
+        if (!from.isBefore(to)) {
+            throw new IllegalArgumentException("From date must be before To date");
+        }
+
+        return ResponseEntity.ok(
+                reportService.getReservationTableByClientId(
+                        from, to, clientId,
+                        page, size,
+                        ReservationTableDto.ReservationSortField.fromValue(sortBy),
+                        SortDirection.fromValue(sortDir)));
+
+    }
+
+    @GetMapping("/{clientId}/payments")
+    public ResponseEntity<PagedResponse<PaymentTableDto>> getPaymentTableByClient(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @PathVariable Long clientId,
+            @Min(value = 0, message = "Page number must be 0 or greater")
+            @RequestParam(defaultValue = "0") int page,
+            @Min(value = 1, message = "Page size must be at least 1")
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ) {
+        if (!from.isBefore(to)) {
+            throw new IllegalArgumentException("From date must be before To date");
+        }
+
+        return ResponseEntity.ok(
+                reportService.getPaymentTableByClientId(
+                        from, to, clientId,
+                        page, size,
+                        PaymentTableDto.PaymentSortFiled.fromValue(sortBy),
+                        SortDirection.fromValue(sortDir)));
+
+    }
+
+
+
 }

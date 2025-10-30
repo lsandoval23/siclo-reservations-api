@@ -186,5 +186,51 @@ public class ReportServiceImpl implements ReportService {
                 .toList();
     }
 
+    @Override
+    public PagedResponse<ReservationTableDto> getReservationTableByClientId(
+            LocalDate from, LocalDate to, Long clientId,
+            int page, int size,
+            ReservationTableDto.ReservationSortField sortBy, SortDirection sortDir) {
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir.getValue()), sortBy.getFieldName());
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<ReservationTableDto> pageResponse = clientRepository.getReservationTableByClientId(from, to, clientId, pageable);
+
+        return new PagedResponse<>(
+                null,
+                pageResponse.getContent(),
+                pageResponse.getNumber(),
+                pageResponse.getSize(),
+                pageResponse.getTotalElements(),
+                pageResponse.getTotalPages(),
+                pageResponse.isLast()
+        );
+    }
+
+    @Override
+    public PagedResponse<PaymentTableDto> getPaymentTableByClientId(
+            LocalDate from, LocalDate to, Long clientId,
+            int page, int size,
+            PaymentTableDto.PaymentSortFiled sortBy, SortDirection sortDir) {
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir.getValue()), sortBy.getFieldName());
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<PaymentTableDto> pageResponse = clientRepository.getPaymentTableByClientId(
+                LocalDateTime.of(from, LocalTime.MIN),
+                LocalDateTime.of(to, LocalTime.MAX),
+                clientId,
+                pageable);
+
+        return new PagedResponse<>(
+                null,
+                pageResponse.getContent(),
+                pageResponse.getNumber(),
+                pageResponse.getSize(),
+                pageResponse.getTotalElements(),
+                pageResponse.getTotalPages(),
+                pageResponse.isLast()
+        );
+    }
+
 
 }
