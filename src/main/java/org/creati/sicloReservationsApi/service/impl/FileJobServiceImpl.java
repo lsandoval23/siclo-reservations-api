@@ -1,22 +1,35 @@
 package org.creati.sicloReservationsApi.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.creati.sicloReservationsApi.dao.postgre.FileJobRepository;
 import org.creati.sicloReservationsApi.dao.postgre.model.FileJob;
 import org.creati.sicloReservationsApi.service.FileJobService;
 import org.creati.sicloReservationsApi.service.model.job.FileJobCreateRequest;
+import org.creati.sicloReservationsApi.service.model.job.FileJobDto;
 import org.creati.sicloReservationsApi.service.model.job.FileJobUpdateRequest;
+import org.creati.sicloReservationsApi.service.model.reports.PagedResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public class FileJobServiceImpl implements FileJobService {
 
     private final FileJobRepository fileJobRepository;
+    private final ObjectMapper objectMapper;
 
-    public FileJobServiceImpl(FileJobRepository fileJobRepository) {
+    public FileJobServiceImpl(
+            final FileJobRepository fileJobRepository,
+            final ObjectMapper objectMapper) {
         this.fileJobRepository = fileJobRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -56,5 +69,30 @@ public class FileJobServiceImpl implements FileJobService {
     @Override
     public Optional<FileJob> getFileJobById(Long jobId) {
         return fileJobRepository.findById(jobId);
+    }
+
+    @Override
+    public PagedResponse<FileJobDto> getFileJobs(
+            LocalDate from, LocalDate to,
+            int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<FileJob> pageResponse = fileJobRepository.findByCreatedAtBetween(
+                LocalDateTime.of(from, LocalTime.MIN),
+                LocalDateTime.of(to, LocalTime.MAX),
+                pageable);
+        List<FileJobDto> mappedContent = pageResponse.getContent().stream()
+                .map(item -> item.toDto(objectMapper))
+                .toList();
+
+        return new PagedResponse<>(
+                null,
+                mappedContent,
+                pageResponse.getNumber(),
+                pageResponse.getSize(),
+                pageResponse.getTotalElements(),
+                pageResponse.getTotalPages(),
+                pageResponse.isLast()
+        );
     }
 }

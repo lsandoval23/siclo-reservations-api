@@ -1,5 +1,7 @@
 package org.creati.sicloReservationsApi.dao.postgre.model;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,9 +14,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.creati.sicloReservationsApi.service.model.job.FileJobDto;
 import org.creati.sicloReservationsApi.service.model.job.FileType;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Entity
 @Table(name = "file_processing_job")
@@ -62,6 +66,27 @@ public class FileJob {
         IN_PROGRESS,
         SUCCESS,
         FAILED
+    }
+
+    public FileJobDto toDto(ObjectMapper objectMapper) {
+        return new FileJobDto(
+                this.getJobId(),
+                this.getFileName(),
+                this.getFileType().name(),
+                this.getStatus().name(),
+                this.getErrorMessage(),
+                this.getCreatedAt(),
+                this.getFinishedAt(),
+                Optional.ofNullable(this.getProcessingResult())
+                        .map(string -> {
+                            try {
+                                return objectMapper.readTree(string);
+                            } catch (JsonProcessingException exception) {
+                                return null;
+                            }
+                        })
+                        .orElse(null)
+        );
     }
 
 
