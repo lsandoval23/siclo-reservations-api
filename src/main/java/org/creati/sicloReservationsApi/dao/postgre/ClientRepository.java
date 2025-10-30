@@ -19,8 +19,26 @@ import java.util.List;
 public interface ClientRepository extends BaseRepository<Client, Long> {
 
     // clientId can be null to get for all clients
-    @Query(value = "SELECT * FROM get_clients_reservations_payments(:fromDate, :toDate, :clientId)", nativeQuery = true)
+    @Query(value = """
+            SELECT *
+            FROM get_clients_reservations_payments(:fromDate, :toDate, :clientId)
+            LIMIT :limit OFFSET :offset
+            """,
+            nativeQuery = true)
     List<ClientReservationsPaymentsProjection> getClientReservationsPayments(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("clientId") Long clientId,
+            @Param("limit") int limit,
+            @Param("offset") int offset
+    );
+
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM get_clients_reservations_payments(:fromDate, :toDate, :clientId)
+            """,
+            nativeQuery = true)
+    long countClientReservationsPayments(
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate,
             @Param("clientId") Long clientId

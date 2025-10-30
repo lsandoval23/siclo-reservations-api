@@ -34,16 +34,20 @@ public class ReportsController {
     }
 
     @GetMapping("/clients")
-    public List<ClientReservationsPaymentsDto> getReservationsPaymentsReport(
+    public ResponseEntity<PagedResponse<ClientReservationsPaymentsDto>> getReservationsPaymentsReport(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(required = false) Long clientId
+            @RequestParam(required = false) Long clientId,
+            @Min(value = 0, message = "Page number must be 0 or greater")
+            @RequestParam(defaultValue = "0") int page,
+            @Min(value = 1, message = "Page size must be at least 1")
+            @RequestParam(defaultValue = "10") int size
     ) {
         if (!from.isBefore(to)) {
             throw new IllegalArgumentException("From date must be before To date");
         }
 
-        return reportService.getClientReservationsPayments(from, to, clientId);
+        return ResponseEntity.ok(reportService.getClientReservationsPayments(from, to, clientId, page, size));
     }
 
     @GetMapping("/clients/{clientId}/reservations")

@@ -19,7 +19,7 @@ public interface ReportService {
 
     PagedResponse<PaymentTableDto> getPaymentTable(LocalDate from, LocalDate to, int page, int size, PaymentTableDto.PaymentSortFiled sortBy, SortDirection sortDir);
 
-    List<ClientReservationsPaymentsDto> getClientReservationsPayments(LocalDate from, LocalDate to, @Nullable Long clientId);
+    PagedResponse<ClientReservationsPaymentsDto> getClientReservationsPayments(LocalDate from, LocalDate to, @Nullable Long clientId, int page, int size);
 
     PagedResponse<ReservationTableDto> getReservationTableByClientId(LocalDate from, LocalDate to, Long clientId, int page, int size, ReservationTableDto.ReservationSortField sortBy, SortDirection sortDir);
 

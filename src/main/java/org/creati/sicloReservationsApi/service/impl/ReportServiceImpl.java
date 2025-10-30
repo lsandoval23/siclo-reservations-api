@@ -166,9 +166,20 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public List<ClientReservationsPaymentsDto> getClientReservationsPayments(LocalDate from, LocalDate to, @Nullable Long clientId) {
-        List<ClientReservationsPaymentsProjection> rows = clientRepository.getClientReservationsPayments(from, to, clientId);
-        return rows.stream()
+    public PagedResponse<ClientReservationsPaymentsDto> getClientReservationsPayments(
+            LocalDate from, LocalDate to,
+            @Nullable Long clientId,
+            int page, int size) {
+
+        int limit = size;
+        int offset = page * size;
+
+        List<ClientReservationsPaymentsProjection> rows = clientRepository.getClientReservationsPayments(from, to, clientId, limit, offset);
+        long totalElements = clientRepository.countClientReservationsPayments(from, to, clientId);
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        boolean last = page + 1 >= totalPages;
+
+        List<ClientReservationsPaymentsDto> mappedRows = rows.stream()
                 .map(rowItem -> new ClientReservationsPaymentsDto(
                         new ClientReservationsPaymentsDto.ClientInfo(
                                 rowItem.getClientId(),
@@ -183,6 +194,17 @@ public class ReportServiceImpl implements ReportService {
                         rowItem.getTopDiscipline()
                 ))
                 .toList();
+
+
+        return new PagedResponse<>(
+                null,
+                mappedRows,
+                page,
+                size,
+                totalElements,
+                totalPages,
+                last
+        );
     }
 
     @Override
