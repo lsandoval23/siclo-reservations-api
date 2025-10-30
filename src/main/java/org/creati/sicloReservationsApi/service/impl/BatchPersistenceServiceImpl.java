@@ -17,7 +17,7 @@ import org.creati.sicloReservationsApi.dao.postgre.model.Reservation;
 import org.creati.sicloReservationsApi.dao.postgre.model.Room;
 import org.creati.sicloReservationsApi.dao.postgre.model.Studio;
 import org.creati.sicloReservationsApi.service.model.PaymentDto;
-import org.creati.sicloReservationsApi.service.model.ProcessingResult;
+import org.creati.sicloReservationsApi.service.model.job.ProcessingResult;
 import org.creati.sicloReservationsApi.service.model.ReservationDto;
 import org.creati.sicloReservationsApi.service.BatchPersistenceService;
 import org.springframework.stereotype.Service;

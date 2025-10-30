@@ -1,4 +1,4 @@
-package org.creati.sicloReservationsApi.service.model;
+package org.creati.sicloReservationsApi.service.model.reports;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

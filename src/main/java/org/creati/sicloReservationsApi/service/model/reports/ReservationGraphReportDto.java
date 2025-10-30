@@ -1,11 +1,11 @@
-package org.creati.sicloReservationsApi.service.model;
+package org.creati.sicloReservationsApi.service.model.reports;
 
 import lombok.Getter;
 
 import java.time.LocalDate;
 import java.util.List;
 
-public record ReservationReportDto(
+public record ReservationGraphReportDto(
         Range range,
         String timeUnit,
         List<ReservationSeriesDto> series
@@ -14,7 +14,14 @@ public record ReservationReportDto(
     public record Range(
             LocalDate from,
             LocalDate to
-    ) { }
+    ) {
+    }
+
+    public record ReservationSeriesDto(
+            String group,
+            List<Long> values
+    ) {
+    }
 
     @Getter
     public enum GroupBy {

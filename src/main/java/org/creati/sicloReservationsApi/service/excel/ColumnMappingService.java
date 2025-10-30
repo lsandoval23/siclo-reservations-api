@@ -4,10 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.creati.sicloReservationsApi.auth.exception.ResourceNotFoundException;
 import org.creati.sicloReservationsApi.dao.postgre.ExcelColumnMappingRepository;
 import org.creati.sicloReservationsApi.dao.postgre.model.ExcelColumnMapping;
-import org.creati.sicloReservationsApi.service.model.BulkUpdateColumnMappingRequest;
-import org.creati.sicloReservationsApi.service.model.ColumnMappingDto;
-import org.creati.sicloReservationsApi.service.model.ProcessingResult;
-import org.creati.sicloReservationsApi.service.model.UpdateColumnMappingRequest;
+import org.creati.sicloReservationsApi.service.model.mapping.BulkUpdateColumnMappingRequest;
+import org.creati.sicloReservationsApi.service.model.mapping.ColumnMappingDto;
+import org.creati.sicloReservationsApi.service.model.job.ProcessingResult;
+import org.creati.sicloReservationsApi.service.model.mapping.UpdateColumnMappingRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

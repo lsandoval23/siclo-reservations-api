@@ -1,6 +1,6 @@
 package org.creati.sicloReservationsApi.service;
 
-import org.creati.sicloReservationsApi.service.model.FileType;
+import org.creati.sicloReservationsApi.service.model.job.FileType;
 
 import java.io.File;
 

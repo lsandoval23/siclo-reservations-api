@@ -2,11 +2,11 @@ package org.creati.sicloReservationsApi.web;
 
 import jakarta.validation.constraints.Min;
 import org.creati.sicloReservationsApi.service.ReportService;
-import org.creati.sicloReservationsApi.service.model.ClientReservationsPaymentsDto;
-import org.creati.sicloReservationsApi.service.model.PagedResponse;
-import org.creati.sicloReservationsApi.service.model.PaymentTableDto;
-import org.creati.sicloReservationsApi.service.model.ReservationTableDto;
-import org.creati.sicloReservationsApi.service.model.SortDirection;
+import org.creati.sicloReservationsApi.service.model.reports.ClientReservationsPaymentsDto;
+import org.creati.sicloReservationsApi.service.model.reports.PagedResponse;
+import org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto;
+import org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto;
+import org.creati.sicloReservationsApi.service.model.reports.SortDirection;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -3,8 +3,8 @@ package org.creati.sicloReservationsApi.service.impl;
 import org.creati.sicloReservationsApi.dao.postgre.FileJobRepository;
 import org.creati.sicloReservationsApi.dao.postgre.model.FileJob;
 import org.creati.sicloReservationsApi.service.FileJobService;
-import org.creati.sicloReservationsApi.service.model.FileJobCreateRequest;
-import org.creati.sicloReservationsApi.service.model.FileJobUpdateRequest;
+import org.creati.sicloReservationsApi.service.model.job.FileJobCreateRequest;
+import org.creati.sicloReservationsApi.service.model.job.FileJobUpdateRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

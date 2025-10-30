@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.creati.sicloReservationsApi.service.model.ColumnMappingDto;
+import org.creati.sicloReservationsApi.service.model.mapping.ColumnMappingDto;
 
 import java.time.LocalDateTime;
 

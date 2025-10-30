@@ -12,7 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.creati.sicloReservationsApi.service.model.FileType;
+import org.creati.sicloReservationsApi.service.model.job.FileType;
 
 import java.time.LocalDateTime;
 

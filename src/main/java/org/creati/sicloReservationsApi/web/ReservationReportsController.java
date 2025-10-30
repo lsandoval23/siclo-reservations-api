@@ -3,10 +3,10 @@ package org.creati.sicloReservationsApi.web;
 import jakarta.validation.constraints.Min;
 import org.creati.sicloReservationsApi.service.ReportService;
 import org.creati.sicloReservationsApi.service.impl.ReportServiceImpl;
-import org.creati.sicloReservationsApi.service.model.PagedResponse;
-import org.creati.sicloReservationsApi.service.model.ReservationReportDto;
-import org.creati.sicloReservationsApi.service.model.ReservationTableDto;
-import org.creati.sicloReservationsApi.service.model.SortDirection;
+import org.creati.sicloReservationsApi.service.model.reports.PagedResponse;
+import org.creati.sicloReservationsApi.service.model.reports.ReservationGraphReportDto;
+import org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto;
+import org.creati.sicloReservationsApi.service.model.reports.SortDirection;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,7 +31,7 @@ public class ReservationReportsController {
     }
 
     @GetMapping("")
-    public ReservationReportDto getReservationReport(
+    public ReservationGraphReportDto getReservationReport(
             @RequestParam String groupBy,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
@@ -40,7 +40,7 @@ public class ReservationReportsController {
         if (!from.isBefore(to)) {
             throw new IllegalArgumentException("From date must be before To date");
         }
-        return reportService.getReservationGroupedReport(ReservationReportDto.GroupBy.fromValue(groupBy), from, to, timeUnit);
+        return reportService.getReservationGroupedReport(ReservationGraphReportDto.GroupBy.fromValue(groupBy), from, to, timeUnit);
     }
 
 

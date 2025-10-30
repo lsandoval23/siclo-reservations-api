@@ -2,10 +2,10 @@ package org.creati.sicloReservationsApi.web;
 
 import jakarta.validation.Valid;
 import org.creati.sicloReservationsApi.service.excel.ColumnMappingService;
-import org.creati.sicloReservationsApi.service.model.BulkUpdateColumnMappingRequest;
-import org.creati.sicloReservationsApi.service.model.ColumnMappingDto;
-import org.creati.sicloReservationsApi.service.model.ProcessingResult;
-import org.creati.sicloReservationsApi.service.model.UpdateColumnMappingRequest;
+import org.creati.sicloReservationsApi.service.model.mapping.BulkUpdateColumnMappingRequest;
+import org.creati.sicloReservationsApi.service.model.mapping.ColumnMappingDto;
+import org.creati.sicloReservationsApi.service.model.job.ProcessingResult;
+import org.creati.sicloReservationsApi.service.model.mapping.UpdateColumnMappingRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;

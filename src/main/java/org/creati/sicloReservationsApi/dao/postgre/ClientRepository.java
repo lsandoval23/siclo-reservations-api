@@ -3,8 +3,8 @@ package org.creati.sicloReservationsApi.dao.postgre;
 import org.creati.sicloReservationsApi.dao.BaseRepository;
 import org.creati.sicloReservationsApi.dao.postgre.dto.ClientReservationsPaymentsProjection;
 import org.creati.sicloReservationsApi.dao.postgre.model.Client;
-import org.creati.sicloReservationsApi.service.model.PaymentTableDto;
-import org.creati.sicloReservationsApi.service.model.ReservationTableDto;
+import org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto;
+import org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -27,7 +27,7 @@ public interface ClientRepository extends BaseRepository<Client, Long> {
     );
 
     @Query("""
-                SELECT new org.creati.sicloReservationsApi.service.model.ReservationTableDto(
+                SELECT new org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto(
                     r.reservationId,
                     r.classId,
                     r.reservationDate,
@@ -35,12 +35,12 @@ public interface ClientRepository extends BaseRepository<Client, Long> {
                     r.orderCreator,
                     r.paymentMethod,
                     r.status,
-                    new org.creati.sicloReservationsApi.service.model.ReservationTableDto$ClientInfo(
+                    new org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto$ClientInfo(
                         c.name,
                         c.email,
                         c.phone
                     ),
-                    new org.creati.sicloReservationsApi.service.model.ReservationTableDto$LocationInfo(
+                    new org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto$LocationInfo(
                         s.name,
                         rm.name,
                         s.country,
@@ -67,7 +67,7 @@ public interface ClientRepository extends BaseRepository<Client, Long> {
 
 
     @Query("""
-                SELECT new org.creati.sicloReservationsApi.service.model.PaymentTableDto(
+                SELECT new org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto(
                     p.operationId,
                     p.month,
                     p.day,
@@ -83,7 +83,7 @@ public interface ClientRepository extends BaseRepository<Client, Long> {
                     p.paymentMethod,
                     p.packageName,
                     p.classCount,
-                    new org.creati.sicloReservationsApi.service.model.PaymentTableDto$ClientInfo(
+                    new org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto$ClientInfo(
                         c.name,
                         c.email,
                         c.phone

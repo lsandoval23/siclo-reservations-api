@@ -1,4 +1,4 @@
-package org.creati.sicloReservationsApi.service.model;
+package org.creati.sicloReservationsApi.service.model.job;
 
 import lombok.Builder;
 import lombok.Data;

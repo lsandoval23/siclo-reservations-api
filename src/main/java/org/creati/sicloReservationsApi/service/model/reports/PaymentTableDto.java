@@ -1,4 +1,4 @@
-package org.creati.sicloReservationsApi.service.model;
+package org.creati.sicloReservationsApi.service.model.reports;
 
 import lombok.Getter;
 

@@ -1,4 +1,4 @@
-package org.creati.sicloReservationsApi.service.model;
+package org.creati.sicloReservationsApi.service.model.mapping;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;

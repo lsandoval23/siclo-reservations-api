@@ -2,14 +2,13 @@ package org.creati.sicloReservationsApi.dao.postgre;
 
 import org.creati.sicloReservationsApi.dao.BaseRepository;
 import org.creati.sicloReservationsApi.dao.postgre.model.PaymentTransaction;
-import org.creati.sicloReservationsApi.service.model.PaymentTableDto;
+import org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,7 +16,7 @@ import java.util.List;
 public interface PaymentTransactionRepository extends BaseRepository<PaymentTransaction, Long> {
 
     @Query("""
-                SELECT new org.creati.sicloReservationsApi.service.model.PaymentTableDto(
+                SELECT new org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto(
                     p.operationId,
                     p.month,
                     p.day,
@@ -33,7 +32,7 @@ public interface PaymentTransactionRepository extends BaseRepository<PaymentTran
                     p.paymentMethod,
                     p.packageName,
                     p.classCount,
-                    new org.creati.sicloReservationsApi.service.model.PaymentTableDto$ClientInfo(
+                    new org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto$ClientInfo(
                         c.name,
                         c.email,
                         c.phone
@@ -51,7 +50,7 @@ public interface PaymentTransactionRepository extends BaseRepository<PaymentTran
 
 
     @Query("""
-                SELECT new org.creati.sicloReservationsApi.service.model.PaymentTableDto$PaymentTableSummary(
+                SELECT new org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto$PaymentTableSummary(
                     p.status,
                     COUNT(p),
                     SUM(p.amountReceived)

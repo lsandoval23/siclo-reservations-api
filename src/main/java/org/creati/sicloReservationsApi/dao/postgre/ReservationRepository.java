@@ -3,7 +3,7 @@ package org.creati.sicloReservationsApi.dao.postgre;
 import org.creati.sicloReservationsApi.dao.BaseRepository;
 import org.creati.sicloReservationsApi.dao.postgre.dto.ReservationReportProjection;
 import org.creati.sicloReservationsApi.dao.postgre.model.Reservation;
-import org.creati.sicloReservationsApi.service.model.ReservationTableDto;
+import org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -24,7 +24,7 @@ public interface ReservationRepository extends BaseRepository<Reservation, Long>
     );
 
     @Query("""
-                SELECT new org.creati.sicloReservationsApi.service.model.ReservationTableDto(
+                SELECT new org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto(
                     r.reservationId,
                     r.classId,
                     r.reservationDate,
@@ -32,12 +32,12 @@ public interface ReservationRepository extends BaseRepository<Reservation, Long>
                     r.orderCreator,
                     r.paymentMethod,
                     r.status,
-                    new org.creati.sicloReservationsApi.service.model.ReservationTableDto$ClientInfo(
+                    new org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto$ClientInfo(
                         c.name,
                         c.email,
                         c.phone
                     ),
-                    new org.creati.sicloReservationsApi.service.model.ReservationTableDto$LocationInfo(
+                    new org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto$LocationInfo(
                         s.name,
                         rm.name,
                         s.country,
@@ -61,7 +61,7 @@ public interface ReservationRepository extends BaseRepository<Reservation, Long>
     );
 
     @Query("""
-                SELECT new org.creati.sicloReservationsApi.service.model.ReservationTableDto$ReservationTableSummary(
+                SELECT new org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto$ReservationTableSummary(
                     r.status,
                     COUNT(r)
                 )

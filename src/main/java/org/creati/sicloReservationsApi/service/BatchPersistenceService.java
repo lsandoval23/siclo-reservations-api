@@ -2,7 +2,7 @@ package org.creati.sicloReservationsApi.service;
 
 import org.creati.sicloReservationsApi.cache.model.EntityCache;
 import org.creati.sicloReservationsApi.service.model.PaymentDto;
-import org.creati.sicloReservationsApi.service.model.ProcessingResult;
+import org.creati.sicloReservationsApi.service.model.job.ProcessingResult;
 import org.creati.sicloReservationsApi.service.model.ReservationDto;
 
 import java.util.List;

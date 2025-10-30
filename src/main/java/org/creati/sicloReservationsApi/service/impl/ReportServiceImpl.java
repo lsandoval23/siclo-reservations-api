@@ -7,13 +7,12 @@ import org.creati.sicloReservationsApi.dao.postgre.ReservationRepository;
 import org.creati.sicloReservationsApi.dao.postgre.dto.ClientReservationsPaymentsProjection;
 import org.creati.sicloReservationsApi.dao.postgre.dto.ReservationReportProjection;
 import org.creati.sicloReservationsApi.service.ReportService;
-import org.creati.sicloReservationsApi.service.model.ClientReservationsPaymentsDto;
-import org.creati.sicloReservationsApi.service.model.PagedResponse;
-import org.creati.sicloReservationsApi.service.model.PaymentTableDto;
-import org.creati.sicloReservationsApi.service.model.ReservationReportDto;
-import org.creati.sicloReservationsApi.service.model.ReservationSeriesDto;
-import org.creati.sicloReservationsApi.service.model.ReservationTableDto;
-import org.creati.sicloReservationsApi.service.model.SortDirection;
+import org.creati.sicloReservationsApi.service.model.reports.ClientReservationsPaymentsDto;
+import org.creati.sicloReservationsApi.service.model.reports.PagedResponse;
+import org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto;
+import org.creati.sicloReservationsApi.service.model.reports.ReservationGraphReportDto;
+import org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto;
+import org.creati.sicloReservationsApi.service.model.reports.SortDirection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,7 +47,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public ReservationReportDto getReservationGroupedReport(ReservationReportDto.GroupBy groupBy, LocalDate from, LocalDate to, String timeUnit) {
+    public ReservationGraphReportDto getReservationGroupedReport(ReservationGraphReportDto.GroupBy groupBy, LocalDate from, LocalDate to, String timeUnit) {
 
         // TODO Add timeUnit handling (week, month, etc.)
         List<ReservationReportProjection> rows = reservationRepository.getReservationsReportByDay(groupBy.getFieldName(), from, to);
@@ -56,7 +55,7 @@ public class ReportServiceImpl implements ReportService {
                 .collect(Collectors.groupingBy(ReservationReportProjection::getGroupName));
         List<LocalDate> allDates = from.datesUntil(to.plusDays(1)).toList();
 
-        List<ReservationSeriesDto> series = grouped.entrySet().stream()
+        List<ReservationGraphReportDto.ReservationSeriesDto> series = grouped.entrySet().stream()
                 .map(entry -> {
                     Map<LocalDate, Long> totalsByDate = entry.getValue().stream()
                             .collect(Collectors.toMap(
@@ -68,12 +67,12 @@ public class ReportServiceImpl implements ReportService {
                             .map(date -> totalsByDate.getOrDefault(date, 0L))
                             .toList();
 
-                    return new ReservationSeriesDto(entry.getKey(), values);
+                    return new ReservationGraphReportDto.ReservationSeriesDto(entry.getKey(), values);
                 })
                 .toList();
 
-        return new ReservationReportDto(
-                new ReservationReportDto.Range(from, to),
+        return new ReservationGraphReportDto(
+                new ReservationGraphReportDto.Range(from, to),
                 timeUnit,
                 series
         );
