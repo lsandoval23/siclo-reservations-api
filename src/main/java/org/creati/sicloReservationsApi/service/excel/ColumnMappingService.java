@@ -11,6 +11,7 @@ import org.creati.sicloReservationsApi.service.model.mapping.UpdateColumnMapping
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,27 +99,42 @@ public class ColumnMappingService {
     public Map<String, String> getHeaderToFieldMapping(String fileType) {
         List<ExcelColumnMapping> mappings = columnMappingRepository.findByFileType(fileType);
         Map<String, String> headerToFieldMap = new HashMap<>();
+
         for (ExcelColumnMapping mapping: mappings) {
-            headerToFieldMap.put(mapping.getExcelHeader(), mapping.getFieldName());
+            String excelHeaderGroup = mapping.getExcelHeader();
+            String fieldName = mapping.getFieldName();
+
+            String[] splitHeaders = excelHeaderGroup.split(";");
+            Arrays.stream(splitHeaders)
+                    .map(String::trim)
+                    .filter(header -> !header.isEmpty())
+                    .forEach(header -> headerToFieldMap.put(header, fieldName));
+
         }
 
         log.info("Loaded {} active column mappings for file type: {}", headerToFieldMap.size(), fileType);
         return headerToFieldMap;
     }
 
-    public Boolean validateRequiredHeaders(Set<String> excelHeaders, String fileType) {
+    public Boolean validateRequiredHeaders(Set<String> excelInputHeaders, String fileType) {
 
+        // Get required headers
         List<ExcelColumnMapping> requiredMappings = columnMappingRepository.findByFileType(fileType).stream()
                 .filter(ExcelColumnMapping::isRequired)
                 .toList();
 
-        Set<String> normalizedExcelHeaders = excelHeaders.stream()
+        // Normalized input headers
+        Set<String> normalizedExcelInputHeaders = excelInputHeaders.stream()
                 .map(header -> header.toLowerCase().trim())
                 .collect(Collectors.toSet());
 
         List<String> missingHeaders = requiredMappings.stream()
                 .map(ExcelColumnMapping::getExcelHeader)
-                .filter(excelHeader -> !normalizedExcelHeaders.contains(excelHeader.toLowerCase().trim()))
+                .filter(excelHeader ->
+                        Arrays.stream(excelHeader.split(";"))
+                                .map(String::trim)
+                                .map(String::toLowerCase)
+                                .noneMatch(normalizedExcelInputHeaders::contains))
                 .toList();
 
         if (!missingHeaders.isEmpty()) {
