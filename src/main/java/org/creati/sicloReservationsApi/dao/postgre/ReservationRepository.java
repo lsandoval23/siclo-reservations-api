@@ -16,9 +16,10 @@ import java.util.List;
 @Repository
 public interface ReservationRepository extends BaseRepository<Reservation, Long> {
 
-    @Query(value = "SELECT * FROM get_reservations_report(:groupBy, :fromDate, :toDate)", nativeQuery = true)
-    List<ReservationReportProjection> getReservationsReportByDay(
+    @Query(value = "SELECT * FROM get_reservations_time_series(:groupBy, :timeUnit,:fromDate, :toDate)", nativeQuery = true)
+    List<ReservationReportProjection> getReservationsReportsTimeSeries(
             @Param("groupBy") String groupBy,
+            @Param("timeUnit") String timeUnit,
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate
     );

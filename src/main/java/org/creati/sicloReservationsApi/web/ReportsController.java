@@ -100,7 +100,7 @@ public class ReportsController {
 
     }
 
-    @GetMapping("/reservations")
+    @GetMapping("/reservations/series")
     public ReservationGraphReportDto getReservationGraphReport(
             @RequestParam String groupBy,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,

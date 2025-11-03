@@ -46,25 +46,45 @@ public class ReportServiceImpl implements ReportService {
         this.clientRepository = clientRepository;
     }
 
-    @Override
-    public ReservationGraphReportDto getReservationGroupedReport(ReservationGraphReportDto.GroupBy groupBy, LocalDate from, LocalDate to, String timeUnit) {
 
-        // TODO Add timeUnit handling (week, month, etc.)
-        List<ReservationReportProjection> rows = reservationRepository.getReservationsReportByDay(groupBy.getFieldName(), from, to);
+    @Override
+    public ReservationGraphReportDto getReservationGroupedReport(
+            ReservationGraphReportDto.GroupBy groupBy,
+            LocalDate from,
+            LocalDate to,
+            String timeUnit) {
+
+        List<ReservationReportProjection> rows = reservationRepository.getReservationsReportsTimeSeries(groupBy.getFieldName(), timeUnit, from, to);
+
+        LocalDate minPeriodStart = rows.stream()
+                .map(ReservationReportProjection::getPeriodStart)
+                .min(LocalDate::compareTo)
+                .orElse(from);
+
+        LocalDate maxPeriodEnd = rows.stream()
+                .map(ReservationReportProjection::getPeriodEnd)
+                .max(LocalDate::compareTo)
+                .orElse(to);
+
         Map<String, List<ReservationReportProjection>> grouped = rows.stream()
                 .collect(Collectors.groupingBy(ReservationReportProjection::getGroupName));
-        List<LocalDate> allDates = from.datesUntil(to.plusDays(1)).toList();
+
+        List<LocalDate> allPeriods = rows.stream()
+                .map(ReservationReportProjection::getPeriodStart)
+                .distinct()
+                .sorted()
+                .toList();
 
         List<ReservationGraphReportDto.ReservationSeriesDto> series = grouped.entrySet().stream()
                 .map(entry -> {
-                    Map<LocalDate, Long> totalsByDate = entry.getValue().stream()
+                    Map<LocalDate, Long> totalsByPeriod = entry.getValue().stream()
                             .collect(Collectors.toMap(
-                                    ReservationReportProjection::getReservationDate,
+                                    ReservationReportProjection::getPeriodStart,
                                     ReservationReportProjection::getTotal
                             ));
 
-                    List<Long> values = allDates.stream()
-                            .map(date -> totalsByDate.getOrDefault(date, 0L))
+                    List<Long> values = allPeriods.stream()
+                            .map(period -> totalsByPeriod.getOrDefault(period, 0L))
                             .toList();
 
                     return new ReservationGraphReportDto.ReservationSeriesDto(entry.getKey(), values);
@@ -72,11 +92,12 @@ public class ReportServiceImpl implements ReportService {
                 .toList();
 
         return new ReservationGraphReportDto(
-                new ReservationGraphReportDto.Range(from, to),
+                new ReservationGraphReportDto.Range(minPeriodStart, maxPeriodEnd),
                 timeUnit,
                 series
         );
     }
+
 
     @Override
     public PagedResponse<ReservationTableDto> getReservationTable(

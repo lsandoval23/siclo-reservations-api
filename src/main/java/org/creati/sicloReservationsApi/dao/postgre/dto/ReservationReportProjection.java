@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 public interface ReservationReportProjection {
     String getGroupName();
-    LocalDate getReservationDate();
+    LocalDate getPeriodStart();
+    LocalDate getPeriodEnd();
     Long getTotal();
 }

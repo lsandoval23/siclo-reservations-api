@@ -231,31 +231,66 @@ CREATE INDEX idx_payment_method          ON payment_transaction(payment_method);
 -- Functions
 -- ========================
 
-CREATE OR REPLACE FUNCTION get_reservations_report(
-    group_by TEXT,
-    from_date DATE,
-    to_date DATE
+CREATE OR REPLACE FUNCTION public.get_reservations_time_series(
+    group_by text,
+    time_unit text,
+    from_date date,
+    to_date date
 )
-RETURNS TABLE(group_name TEXT, reservation_date DATE, total BIGINT)
+RETURNS TABLE(
+    group_name text,
+    period_start date,
+    period_end date,
+    total bigint
+)
 LANGUAGE sql
-AS $$
+AS $function$
 SELECT
     (CASE
-        WHEN group_by = 'studio'    THEN s.name
+        WHEN group_by = 'studio'     THEN s.name
         WHEN group_by = 'instructor' THEN i.name
         WHEN group_by = 'discipline' THEN d.name
     END)::text AS group_name,
-    r.reservation_date,
+
+    (CASE
+        WHEN time_unit = 'day'   THEN r.reservation_date
+        WHEN time_unit = 'week'  THEN date_trunc('week', r.reservation_date)::date
+        WHEN time_unit = 'month' THEN date_trunc('month', r.reservation_date)::date
+        ELSE r.reservation_date
+    END) AS period_start,
+
+    (CASE
+        WHEN time_unit = 'day'   THEN r.reservation_date
+        WHEN time_unit = 'week'  THEN (date_trunc('week', r.reservation_date) + interval '6 days')::date
+        WHEN time_unit = 'month' THEN (date_trunc('month', r.reservation_date) + interval '1 month - 1 day')::date
+        ELSE r.reservation_date
+    END) AS period_end,
+
     COUNT(r.reservation_id)::bigint AS total
+
 FROM reservation r
 LEFT JOIN room rm      ON r.room_id = rm.room_id
 LEFT JOIN studio s     ON rm.studio_id = s.studio_id
 LEFT JOIN instructor i ON r.instructor_id = i.instructor_id
 LEFT JOIN discipline d ON r.discipline_id = d.discipline_id
+
 WHERE r.reservation_date BETWEEN from_date AND to_date
-GROUP BY group_name, r.reservation_date
-ORDER BY group_name, r.reservation_date;
-$$;
+GROUP BY
+    group_name,
+    (CASE
+        WHEN time_unit = 'day'   THEN r.reservation_date
+        WHEN time_unit = 'week'  THEN date_trunc('week', r.reservation_date)::date
+        WHEN time_unit = 'month' THEN date_trunc('month', r.reservation_date)::date
+        ELSE r.reservation_date
+    END),
+    (CASE
+        WHEN time_unit = 'day'   THEN r.reservation_date
+        WHEN time_unit = 'week'  THEN (date_trunc('week', r.reservation_date) + interval '6 days')::date
+        WHEN time_unit = 'month' THEN (date_trunc('month', r.reservation_date) + interval '1 month - 1 day')::date
+        ELSE r.reservation_date
+    END)
+ORDER BY group_name, period_start;
+$function$;
 
 
 CREATE OR REPLACE FUNCTION get_clients_reservations_payments(
