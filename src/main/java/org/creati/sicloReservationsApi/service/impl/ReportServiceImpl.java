@@ -6,6 +6,10 @@ import org.creati.sicloReservationsApi.dao.postgre.PaymentTransactionRepository;
 import org.creati.sicloReservationsApi.dao.postgre.ReservationRepository;
 import org.creati.sicloReservationsApi.dao.postgre.dto.ClientReservationsPaymentsProjection;
 import org.creati.sicloReservationsApi.dao.postgre.dto.ReservationReportProjection;
+import org.creati.sicloReservationsApi.dao.postgre.model.PaymentTransaction;
+import org.creati.sicloReservationsApi.dao.postgre.model.Reservation;
+import org.creati.sicloReservationsApi.dao.spec.PaymentSpecifications;
+import org.creati.sicloReservationsApi.dao.spec.ReservationSpecifications;
 import org.creati.sicloReservationsApi.service.ReportService;
 import org.creati.sicloReservationsApi.service.model.reports.ClientReservationsPaymentsDto;
 import org.creati.sicloReservationsApi.service.model.reports.PagedResponse;
@@ -17,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
@@ -102,12 +107,32 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public PagedResponse<ReservationTableDto> getReservationTable(
             LocalDate from, LocalDate to,
+            Map<String, String> filters,
             int page, int size,
             ReservationTableDto.ReservationSortField sortBy, SortDirection sortDir) {
 
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir.getValue()), sortBy.getFieldName());
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<ReservationTableDto> pageResponse = reservationRepository.getReservationTable(from, to, pageable);
+        Specification<Reservation> spec = ReservationSpecifications.dateBetween(from, to);
+
+        if (filters != null && !filters.isEmpty()) {
+            for (var entry: filters.entrySet()) {
+                String key = entry.getKey().toLowerCase();
+                String value = entry.getValue();
+
+                switch (key) {
+                    case "client" -> spec = spec.and(ReservationSpecifications.clientLike(value));
+                    case "instructor" -> spec = spec.and(ReservationSpecifications.instructorLike(value));
+                    case "discipline" -> spec = spec.and(ReservationSpecifications.disciplineLike(value));
+                    default -> log.warn("Unknown RESERVATION filter: {}", key);
+                }
+            }
+        }
+
+        Page<Reservation> pageResponse = reservationRepository.findAll(spec, pageable);
+        List<ReservationTableDto> mappedContent = pageResponse.getContent().stream()
+                .map(Reservation::toDto)
+                .toList();
 
         // Build summary
         List<ReservationTableDto.ReservationTableSummary> summaryList = reservationRepository.getReservationSummary(from, to);
@@ -133,7 +158,7 @@ public class ReportServiceImpl implements ReportService {
 
         return new PagedResponse<>(
                 summary,
-                pageResponse.getContent(),
+                mappedContent,
                 pageResponse.getNumber(),
                 pageResponse.getSize(),
                 pageResponse.getTotalElements(),
@@ -145,16 +170,35 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public PagedResponse<PaymentTableDto> getPaymentTable(
             LocalDate from, LocalDate to,
+            Map<String, String> filters,
             int page, int size,
             PaymentTableDto.PaymentSortFiled sortBy, SortDirection sortDir) {
 
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir.getValue()), sortBy.getFieldName());
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<PaymentTableDto> pageResponse = paymentRepository.getPaymentTable(
+        Specification<PaymentTransaction> spec = PaymentSpecifications.purchaseDateBetween(
                 LocalDateTime.of(from, LocalTime.MIN),
-                LocalDateTime.of(to, LocalTime.MAX),
-                pageable);
+                LocalDateTime.of(to, LocalTime.MAX));
 
+        if (filters != null && !filters.isEmpty()) {
+            for (var entry: filters.entrySet()) {
+                String key = entry.getKey().toLowerCase();
+                String value = entry.getValue();
+
+                switch (key) {
+                    case "client" -> spec = spec.and(PaymentSpecifications.clientLike(value));
+                    case "payment" -> spec = spec.and(PaymentSpecifications.paymentMethodLike(value));
+                    default -> log.warn("Unknown PAYMENT filter: {}", key);
+                }
+            }
+        }
+
+        Page<PaymentTransaction> pageResponse = paymentRepository.findAll(spec, pageable);
+        List<PaymentTableDto> mappedContent = pageResponse.getContent().stream()
+                .map(PaymentTransaction::toDto)
+                .toList();
+
+        // Build summary
         List<PaymentTableDto.PaymentTableSummary> summaryList = paymentRepository.getPaymentSummary(
                 LocalDateTime.of(from, LocalTime.MIN),
                 LocalDateTime.of(to, LocalTime.MAX));
@@ -177,7 +221,7 @@ public class ReportServiceImpl implements ReportService {
 
         return new PagedResponse<>(
                 summary,
-                pageResponse.getContent(),
+                mappedContent,
                 pageResponse.getNumber(),
                 pageResponse.getSize(),
                 pageResponse.getTotalElements(),

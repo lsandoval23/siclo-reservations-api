@@ -1,6 +1,8 @@
 package org.creati.sicloReservationsApi.web;
 
 import jakarta.validation.constraints.Min;
+import org.creati.sicloReservationsApi.dao.spec.PaymentSpecifications;
+import org.creati.sicloReservationsApi.dao.spec.ReservationSpecifications;
 import org.creati.sicloReservationsApi.service.ReportService;
 import org.creati.sicloReservationsApi.service.model.reports.ClientReservationsPaymentsDto;
 import org.creati.sicloReservationsApi.service.model.reports.PagedResponse;
@@ -19,7 +21,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Validated
 @RestController
@@ -123,15 +126,21 @@ public class ReportsController {
             @Min(value = 1, message = "Page size must be at least 1")
             @RequestParam(defaultValue = "10") int size,
             @RequestParam String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam Map<String, String> allParams
     ) {
         if (!from.isBefore(to)) {
             throw new IllegalArgumentException("From date must be before To date");
         }
 
+        Map<String, String> filters = allParams.entrySet().stream()
+                .filter(entry -> ReservationSpecifications.allowedFilters.contains(entry.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
         return ResponseEntity.ok().body(
                 reportService.getReservationTable(
-                        from, to, page, size,
+                        from, to, filters,
+                        page, size,
                         ReservationTableDto.ReservationSortField.fromValue(sortBy),
                         SortDirection.fromValue(sortDir)));
     }
@@ -145,15 +154,21 @@ public class ReportsController {
             @Min(value = 1, message = "Page size must be at least 1")
             @RequestParam(defaultValue = "10") int size,
             @RequestParam String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam Map<String, String> allParams
     ) {
         if (!from.isBefore(to)) {
             throw new IllegalArgumentException("From date must be before To date");
         }
 
+        Map<String, String> filters = allParams.entrySet().stream()
+                .filter(entry -> PaymentSpecifications.allowedFilters.contains(entry.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
         return ResponseEntity.ok().body(
                 reportService.getPaymentTable(
-                        from, to, page, size,
+                        from, to, filters,
+                        page, size,
                         PaymentTableDto.PaymentSortFiled.fromValue(sortBy),
                         SortDirection.fromValue(sortDir)
                 )

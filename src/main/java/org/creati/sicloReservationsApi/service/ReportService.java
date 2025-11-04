@@ -9,21 +9,32 @@ import org.creati.sicloReservationsApi.service.model.reports.SortDirection;
 import org.springframework.lang.Nullable;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Map;
 
 public interface ReportService {
 
     ReservationGraphReportDto getReservationGroupedReport(ReservationGraphReportDto.GroupBy groupBy, LocalDate from, LocalDate to, String timeUnit);
 
-    PagedResponse<ReservationTableDto> getReservationTable(LocalDate from, LocalDate to, int page, int size, ReservationTableDto.ReservationSortField sortBy, SortDirection sortDir);
+    PagedResponse<ReservationTableDto> getReservationTable(
+            LocalDate from, LocalDate to,  Map<String, String> filters,
+            int page, int size, ReservationTableDto.ReservationSortField sortBy, SortDirection sortDir);
 
-    PagedResponse<PaymentTableDto> getPaymentTable(LocalDate from, LocalDate to, int page, int size, PaymentTableDto.PaymentSortFiled sortBy, SortDirection sortDir);
+    PagedResponse<PaymentTableDto> getPaymentTable(
+            LocalDate from, LocalDate to, Map<String, String> filters,
+            int page, int size,
+            PaymentTableDto.PaymentSortFiled sortBy, SortDirection sortDir);
 
     PagedResponse<ClientReservationsPaymentsDto> getClientReservationsPayments(LocalDate from, LocalDate to, @Nullable Long clientId, int page, int size);
 
-    PagedResponse<ReservationTableDto> getReservationTableByClientId(LocalDate from, LocalDate to, Long clientId, int page, int size, ReservationTableDto.ReservationSortField sortBy, SortDirection sortDir);
+    PagedResponse<ReservationTableDto> getReservationTableByClientId(
+            LocalDate from, LocalDate to, Long clientId,
+            int page, int size,
+            ReservationTableDto.ReservationSortField sortBy, SortDirection sortDir);
 
-    PagedResponse<PaymentTableDto> getPaymentTableByClientId(LocalDate from, LocalDate to, Long clientId, int page, int size, PaymentTableDto.PaymentSortFiled sortBy, SortDirection sortDir);
+    PagedResponse<PaymentTableDto> getPaymentTableByClientId(
+            LocalDate from, LocalDate to, Long clientId,
+            int page, int size,
+            PaymentTableDto.PaymentSortFiled sortBy, SortDirection sortDir);
 
 
 }

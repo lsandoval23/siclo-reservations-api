@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -70,4 +71,31 @@ public class Reservation {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    public ReservationTableDto toDto() {
+        return new ReservationTableDto(
+                this.getReservationId(),
+                this.getClassId(),
+                this.getReservationDate(),
+                this.getReservationTime(),
+                this.getOrderCreator(),
+                this.getPaymentMethod(),
+                this.getStatus(),
+                new ReservationTableDto.ClientInfo(
+                        this.getClient().getName(),
+                        this.getClient().getEmail(),
+                        this.getClient().getPhone()
+                ),
+                new ReservationTableDto.LocationInfo(
+                        this.getRoom().getStudio().getName(),
+                        this.getRoom().getName(),
+                        this.getRoom().getStudio().getCountry(),
+                        this.getRoom().getStudio().getCity()
+                ),
+                this.getDiscipline().getName(),
+                this.getInstructor().getName()
+        );
+    }
+
+
 }

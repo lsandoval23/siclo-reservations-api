@@ -3,8 +3,6 @@ package org.creati.sicloReservationsApi.dao.postgre.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -14,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -86,4 +85,29 @@ public class PaymentTransaction {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    public PaymentTableDto toDto() {
+        return new PaymentTableDto(
+                this.getOperationId(),
+                this.getMonth(),
+                this.getDay(),
+                this.getWeek(),
+                this.getPurchaseDate(),
+                this.getAccreditationDate(),
+                this.getReleaseDate(),
+                this.getOperationType(),
+                this.getProductValue(),
+                this.getTransactionFee(),
+                this.getAmountReceived(),
+                this.getInstallments(),
+                this.getPaymentMethod(),
+                this.getPackageName(),
+                this.getClassCount(),
+                new PaymentTableDto.ClientInfo(
+                        this.getClient().getName(),
+                        this.getClient().getEmail(),
+                        this.getClient().getPhone())
+        );
+    }
+
 }
