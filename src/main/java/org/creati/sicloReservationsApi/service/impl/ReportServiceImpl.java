@@ -245,21 +245,8 @@ public class ReportServiceImpl implements ReportService {
         boolean last = page + 1 >= totalPages;
 
         List<ClientReservationsPaymentsDto> mappedRows = rows.stream()
-                .map(rowItem -> new ClientReservationsPaymentsDto(
-                        new ClientReservationsPaymentsDto.ClientInfo(
-                                rowItem.getClientId(),
-                                rowItem.getClientName(),
-                                rowItem.getClientEmail(),
-                                rowItem.getClientPhone()),
-                        rowItem.getTotalReservations(),
-                        rowItem.getTotalPayments(),
-                        rowItem.getTotalAmountReceived(),
-                        rowItem.getLastPaymentDate(),
-                        rowItem.getLastReservationDate(),
-                        rowItem.getTopDiscipline()
-                ))
+                .map(ClientReservationsPaymentsProjection::toDto)
                 .toList();
-
 
         return new PagedResponse<>(
                 null,
