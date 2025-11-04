@@ -18,30 +18,30 @@ import java.util.List;
 @Repository
 public interface ClientRepository extends BaseRepository<Client, Long> {
 
-    // clientId can be null to get for all clients
+    // clientFilter can be null, email or name partial match
     @Query(value = """
             SELECT *
-            FROM get_clients_reservations_payments(:fromDate, :toDate, :clientId)
+            FROM get_clients_reservations_payments(:fromDate, :toDate, :clientFilter)
             LIMIT :limit OFFSET :offset
             """,
             nativeQuery = true)
     List<ClientReservationsPaymentsProjection> getClientReservationsPayments(
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate,
-            @Param("clientId") Long clientId,
+            @Param("clientFilter") String clientFilter,
             @Param("limit") int limit,
             @Param("offset") int offset
     );
 
     @Query(value = """
             SELECT COUNT(*)
-            FROM get_clients_reservations_payments(:fromDate, :toDate, :clientId)
+            FROM get_clients_reservations_payments(:fromDate, :toDate, :clientFilter)
             """,
             nativeQuery = true)
     long countClientReservationsPayments(
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate,
-            @Param("clientId") Long clientId
+            @Param("clientFilter") String clientFilter
     );
 
     @Query("""

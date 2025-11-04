@@ -24,7 +24,9 @@ public interface ReportService {
             int page, int size,
             PaymentTableDto.PaymentSortFiled sortBy, SortDirection sortDir);
 
-    PagedResponse<ClientReservationsPaymentsDto> getClientReservationsPayments(LocalDate from, LocalDate to, @Nullable Long clientId, int page, int size);
+    PagedResponse<ClientReservationsPaymentsDto> getClientReservationsPayments(
+            LocalDate from, LocalDate to, @Nullable String clientFilter,
+            int page, int size);
 
     PagedResponse<ReservationTableDto> getReservationTableByClientId(
             LocalDate from, LocalDate to, Long clientId,

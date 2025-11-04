@@ -296,7 +296,7 @@ $function$;
 CREATE OR REPLACE FUNCTION get_clients_reservations_payments(
     start_date DATE,
     end_date DATE,
-    client_id_param BIGINT DEFAULT NULL
+    client_filter TEXT DEFAULT NULL
 )
 RETURNS TABLE (
     client_id BIGINT,
@@ -343,7 +343,9 @@ AS $$
         AND p.purchase_date BETWEEN start_date AND end_date
     LEFT JOIN top_discipline_per_client td
         ON c.client_id = td.client_id
-    WHERE client_id_param IS NULL OR c.client_id = client_id_param
+    WHERE client_filter IS NULL
+	OR LOWER(c.name) LIKE LOWER(CONCAT('%', client_filter, '%'))
+	OR LOWER(c.email) LIKE LOWER(CONCAT('%', client_filter, '%'))
     GROUP BY c.client_id, c.name, c.email, td.top_discipline, td.top_discipline_count
     ORDER BY c.name;
 $$;

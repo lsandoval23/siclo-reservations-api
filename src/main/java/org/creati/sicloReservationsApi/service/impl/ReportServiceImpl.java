@@ -233,14 +233,14 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public PagedResponse<ClientReservationsPaymentsDto> getClientReservationsPayments(
             LocalDate from, LocalDate to,
-            @Nullable Long clientId,
+            @Nullable String clientFilter,
             int page, int size) {
 
         int limit = size;
         int offset = page * size;
 
-        List<ClientReservationsPaymentsProjection> rows = clientRepository.getClientReservationsPayments(from, to, clientId, limit, offset);
-        long totalElements = clientRepository.countClientReservationsPayments(from, to, clientId);
+        List<ClientReservationsPaymentsProjection> rows = clientRepository.getClientReservationsPayments(from, to, clientFilter, limit, offset);
+        long totalElements = clientRepository.countClientReservationsPayments(from, to, clientFilter);
         int totalPages = (int) Math.ceil((double) totalElements / size);
         boolean last = page + 1 >= totalPages;
 
