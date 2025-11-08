@@ -25,4 +25,7 @@ public interface PaymentTransactionRepository extends BaseRepository<PaymentTran
             """)
     List<PaymentTableDto.PaymentTableSummary> getPaymentSummary(@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
 
+    @Query("SELECT DISTINCT p.paymentMethod FROM PaymentTransaction p WHERE p.paymentMethod IS NOT NULL ORDER BY p.paymentMethod")
+    List<String> findDistinctPaymentMethods();
+
 }
