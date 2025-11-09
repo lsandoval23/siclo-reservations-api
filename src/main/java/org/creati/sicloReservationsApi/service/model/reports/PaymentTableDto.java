@@ -37,6 +37,12 @@ public record PaymentTableDto(
             BigDecimal totalAmount
     ){}
 
+    public record PaymentMethodSummary(
+            String paymentMethod,
+            BigDecimal totalAmount,
+            Long transactionCount
+    ) {}
+
 
     @Getter
     public enum PaymentSortFiled {

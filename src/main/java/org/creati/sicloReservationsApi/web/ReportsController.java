@@ -10,6 +10,7 @@ import org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto;
 import org.creati.sicloReservationsApi.service.model.reports.ReservationGraphReportDto;
 import org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto;
 import org.creati.sicloReservationsApi.service.model.reports.SortDirection;
+import org.creati.sicloReservationsApi.service.model.reports.TopDisciplineDto;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -35,6 +37,10 @@ public class ReportsController {
     public ReportsController(final ReportService reportService) {
         this.reportService = reportService;
     }
+
+
+    /*     Clients Reports
+     */
 
     @GetMapping("/clients")
     public ResponseEntity<PagedResponse<ClientReservationsPaymentsDto>> getReservationsPaymentsReport(
@@ -103,6 +109,9 @@ public class ReportsController {
 
     }
 
+    /*     Reservations Reports
+     */
+
     @GetMapping("/reservations/series")
     public ReservationGraphReportDto getReservationGraphReport(
             @RequestParam String groupBy,
@@ -145,6 +154,21 @@ public class ReportsController {
                         SortDirection.fromValue(sortDir)));
     }
 
+    @GetMapping("/reservations/top-disciplines")
+    public ResponseEntity<List<TopDisciplineDto>> getPopularDisciplines(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        return ResponseEntity.ok(reportService.getTopDisciplines(from, to, limit));
+    }
+
+
+    /*     Payments Reports
+     */
+
     @GetMapping("/payments/table")
     public ResponseEntity<PagedResponse<PaymentTableDto>> getPaymentTable(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -173,5 +197,16 @@ public class ReportsController {
                         SortDirection.fromValue(sortDir)
                 )
         );
+    }
+
+    @GetMapping("/payments/payment-methods/summary")
+    public ResponseEntity<List<PaymentTableDto.PaymentMethodSummary>> getPaymentMethodSummary(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+
+        return ResponseEntity.ok(reportService.getPaymentMethodSummaries(from, to));
     }
 }

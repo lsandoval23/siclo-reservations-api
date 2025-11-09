@@ -17,6 +17,7 @@ import org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto;
 import org.creati.sicloReservationsApi.service.model.reports.ReservationGraphReportDto;
 import org.creati.sicloReservationsApi.service.model.reports.ReservationTableDto;
 import org.creati.sicloReservationsApi.service.model.reports.SortDirection;
+import org.creati.sicloReservationsApi.service.model.reports.TopDisciplineDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -165,6 +166,31 @@ public class ReportServiceImpl implements ReportService {
                 pageResponse.getTotalPages(),
                 pageResponse.isLast()
         );
+    }
+
+    @Override
+    public List<TopDisciplineDto> getTopDisciplines(LocalDate from, LocalDate to, int limit) {
+        Pageable topN = PageRequest.of(0, limit);
+        LocalDate effectiveFrom = from != null
+                ? from
+                : LocalDate.of(1970, 1, 1);
+        LocalDate effectiveTo = to != null
+                ? to
+                : LocalDate.now();
+
+        return reservationRepository.findPopularDisciplines(effectiveFrom, effectiveTo, topN);
+    }
+
+    @Override
+    public List<PaymentTableDto.PaymentMethodSummary> getPaymentMethodSummaries(LocalDate from, LocalDate to) {
+        LocalDateTime effectiveFrom = from != null
+                ? LocalDateTime.of(from, LocalTime.MIN)
+                : LocalDateTime.of(1970, 1, 1, 0, 0);
+        LocalDateTime effectiveTo = to != null
+                ? LocalDateTime.of(to, LocalTime.MAX)
+                : LocalDateTime.now();
+
+        return paymentRepository.getPaymentSummaryReport(effectiveFrom, effectiveTo);
     }
 
     @Override

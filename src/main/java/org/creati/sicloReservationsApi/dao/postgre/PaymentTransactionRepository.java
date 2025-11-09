@@ -28,4 +28,21 @@ public interface PaymentTransactionRepository extends BaseRepository<PaymentTran
     @Query("SELECT DISTINCT p.paymentMethod FROM PaymentTransaction p WHERE p.paymentMethod IS NOT NULL ORDER BY p.paymentMethod")
     List<String> findDistinctPaymentMethods();
 
+    @Query("""
+                SELECT new org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto$PaymentMethodSummary(
+                    p.paymentMethod,
+                    COALESCE(SUM(p.amountReceived), 0),
+                    COUNT(p)
+                )
+                FROM PaymentTransaction p
+                WHERE p.purchaseDate BETWEEN :fromDate AND :toDate
+                GROUP BY p.paymentMethod
+                ORDER BY SUM(p.amountReceived) DESC
+            """)
+    List<PaymentTableDto.PaymentMethodSummary> getPaymentSummaryReport(
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate
+    );
+
+
 }
