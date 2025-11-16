@@ -25,7 +25,7 @@ CREATE TABLE client (
     email          VARCHAR(150) UNIQUE NOT NULL,
     phone          VARCHAR(50),
     document_id    VARCHAR(50),
-    created_at     TIMESTAMP DEFAULT now()
+    created_at     TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
 -- ========================
@@ -36,7 +36,7 @@ CREATE TABLE studio (
     name           VARCHAR(150) UNIQUE NOT NULL,
     country        VARCHAR(100),
     city           VARCHAR(100),
-    created_at     TIMESTAMP DEFAULT now()
+    created_at     TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
 -- ========================
@@ -46,7 +46,7 @@ CREATE TABLE room (
     room_id        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     studio_id      BIGINT NOT NULL,
     name           VARCHAR(100) UNIQUE NOT NULL,
-    created_at     TIMESTAMP DEFAULT now(),
+    created_at     TIMESTAMP WITH TIME ZONE DEFAULT now(),
     CONSTRAINT fk_room_studio FOREIGN KEY (studio_id) REFERENCES studio(studio_id) ON DELETE CASCADE
 );
 
@@ -81,7 +81,7 @@ CREATE TABLE reservation (
     order_creator    VARCHAR(150),
     payment_method   VARCHAR(100),
     status           VARCHAR(50),
-    created_at       TIMESTAMP DEFAULT now(),
+    created_at       TIMESTAMP WITH TIME ZONE DEFAULT now(),
     CONSTRAINT fk_reservation_room       FOREIGN KEY (room_id) REFERENCES room(room_id) ON DELETE CASCADE,
     CONSTRAINT fk_reservation_discipline FOREIGN KEY (discipline_id) REFERENCES discipline(discipline_id) ON DELETE CASCADE,
     CONSTRAINT fk_reservation_instructor FOREIGN KEY (instructor_id) REFERENCES instructor(instructor_id) ON DELETE CASCADE,
@@ -109,7 +109,7 @@ CREATE TABLE payment_transaction (
     payment_method     VARCHAR(100),
     package            VARCHAR(100),
     class_count        INT,
-    created_at         TIMESTAMP DEFAULT now(),
+    created_at         TIMESTAMP WITH TIME ZONE DEFAULT now(),
     CONSTRAINT fk_payment_client FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE
 );
 
@@ -145,7 +145,7 @@ CREATE TABLE excel_column_mapping (
     excel_header    VARCHAR(255) NOT NULL,
     required        BOOLEAN DEFAULT FALSE,
     data_type       VARCHAR(50) DEFAULT 'STRING',
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(file_type, field_name)
 );
 
@@ -164,8 +164,8 @@ CREATE TABLE users (
     first_name VARCHAR(50),
     last_name VARCHAR(50),
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- ========================
@@ -176,7 +176,7 @@ CREATE TABLE roles (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
     description VARCHAR(500),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- ========================
@@ -189,7 +189,7 @@ CREATE TABLE permissions (
     description VARCHAR(500),
     resource VARCHAR(50),
     action VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- ========================

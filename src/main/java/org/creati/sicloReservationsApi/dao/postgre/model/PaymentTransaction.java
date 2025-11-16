@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 import org.creati.sicloReservationsApi.service.model.reports.PaymentTableDto;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
@@ -75,7 +76,7 @@ public class PaymentTransaction {
     private Integer classCount;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
@@ -83,7 +84,7 @@ public class PaymentTransaction {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = Instant.now();
     }
 
     public PaymentTableDto toDto() {

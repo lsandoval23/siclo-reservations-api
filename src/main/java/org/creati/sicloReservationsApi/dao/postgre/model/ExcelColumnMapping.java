@@ -8,7 +8,9 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.creati.sicloReservationsApi.service.model.mapping.ColumnMappingDto;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Data
 @Entity
@@ -37,7 +39,7 @@ public class ExcelColumnMapping {
 
     private String dataType;
 
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
 
     public ColumnMappingDto toDto() {
@@ -48,24 +50,9 @@ public class ExcelColumnMapping {
                 .excelHeader(this.getExcelHeader())
                 .required(this.isRequired())
                 .dataType(this.getDataType())
-                .createdAt(this.getCreatedAt())
+                .createdAt(LocalDateTime.ofInstant(this.getCreatedAt(), ZoneId.of("America/Lima")))
                 .build();
     }
-
-    public static ExcelColumnMapping fromDto(ColumnMappingDto dto) {
-        return ExcelColumnMapping.builder()
-                .mappingId(dto.getMappingId())
-                .fileType(dto.getFileType())
-                .fieldName(dto.getFieldName())
-                .excelHeader(dto.getExcelHeader())
-                .required(dto.getRequired() != null ? dto.getRequired() : false)
-                .dataType(dto.getDataType())
-                .createdAt(dto.getCreatedAt())
-                .build();
-    }
-
-
-
 
 
 }
