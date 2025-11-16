@@ -17,7 +17,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -129,12 +128,7 @@ public class FileController {
             @Min(value = 1, message = "Page size must be at least 1")
             @RequestParam(defaultValue = "10") int size
     ) {
-        if (!from.isBefore(to)) {
-            throw new IllegalArgumentException("From date must be before To date");
-        }
-
         return ResponseEntity.ok(fileJobService.getFileJobs(from, to, page, size));
-
     }
 
 

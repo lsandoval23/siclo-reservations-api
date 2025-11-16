@@ -9,6 +9,7 @@ import org.creati.sicloReservationsApi.exception.FileProcessingException;
 import org.creati.sicloReservationsApi.service.FileJobService;
 import org.creati.sicloReservationsApi.service.FileProcessingService;
 import org.creati.sicloReservationsApi.service.model.job.FileJobUpdateRequest;
+import org.creati.sicloReservationsApi.service.model.job.FileProcessingStrategy;
 import org.creati.sicloReservationsApi.service.model.job.FileType;
 import org.creati.sicloReservationsApi.service.model.PaymentDto;
 import org.creati.sicloReservationsApi.service.model.job.ProcessingResult;
@@ -20,11 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 @Slf4j
 @Service
@@ -92,7 +93,7 @@ public class ExcelProcessingService implements FileProcessingService {
 
             FileJobUpdateRequest updateRequest = FileJobUpdateRequest.builder()
                     .status(jobStatus)
-                    .finishedAt(LocalDateTime.now())
+                    .finishedAt(Instant.now())
                     .totalRecords(batchProcessingResult.getTotalProcessed())
                     .processedRecords(batchProcessingResult.getSuccessCount())
                     .skippedRecords(batchProcessingResult.getSkipped())
@@ -165,20 +166,6 @@ public class ExcelProcessingService implements FileProcessingService {
         }
         return strategy;
     }
-
-
-    public record FileProcessingStrategy<T>(
-            Class<T> dtoClass,
-            BiConsumer<List<T>, List<ProcessingResult>> persistFunction,
-            String extraParam) {
-
-        public void persist(List<?> batch, List<ProcessingResult> batchResults) {
-            @SuppressWarnings("unchecked")
-            List<T> typedBatch = (List<T>) batch;
-            persistFunction.accept(typedBatch, batchResults);
-        }
-    }
-
 
 
 }

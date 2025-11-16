@@ -6,11 +6,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Repository
 public interface FileJobRepository extends BaseRepository<FileJob, Long> {
 
-    Page<FileJob> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+    Page<FileJob> findByCreatedAtBetween(Instant start, Instant end, Pageable pageable);
 
 }

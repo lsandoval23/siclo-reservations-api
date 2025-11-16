@@ -13,9 +13,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,8 +41,8 @@ public class FileJobServiceImpl implements FileJobService {
                 .fileExtension(createRequest.getFileExtension())
                 .fileType(createRequest.getFileType())
                 .status(FileJob.JobStatus.PENDING)
-                .updatedAt(LocalDateTime.now())
-                .createdAt(LocalDateTime.now())
+                .updatedAt(Instant.now())
+                .createdAt(Instant.now())
                 .build());
     }
 
@@ -54,7 +56,7 @@ public class FileJobServiceImpl implements FileJobService {
                 .status(updateRequest.getStatus())
                 .errorMessage(updateRequest.getErrorMessage())
                 .createdAt(existingJob.getCreatedAt())
-                .updatedAt(LocalDateTime.now())
+                .updatedAt(Instant.now())
                 .finishedAt(updateRequest.getFinishedAt())
                 .totalRecords(updateRequest.getTotalRecords())
                 .processedRecords(updateRequest.getProcessedRecords())
@@ -76,11 +78,13 @@ public class FileJobServiceImpl implements FileJobService {
             LocalDate from, LocalDate to,
             int page, int size) {
 
+        ZoneId lima = ZoneId.of("America/Lima");
         Pageable pageable = PageRequest.of(page, size);
-        Page<FileJob> pageResponse = fileJobRepository.findByCreatedAtBetween(
-                LocalDateTime.of(from, LocalTime.MIN),
-                LocalDateTime.of(to, LocalTime.MAX),
-                pageable);
+
+        Instant start =  from.atStartOfDay(lima).toInstant();
+        Instant end = to.atTime(LocalTime.MAX).atZone(lima).toInstant();
+
+        Page<FileJob> pageResponse = fileJobRepository.findByCreatedAtBetween(start, end, pageable);
         List<FileJobDto> mappedContent = pageResponse.getContent().stream()
                 .map(item -> item.toDto(objectMapper))
                 .toList();

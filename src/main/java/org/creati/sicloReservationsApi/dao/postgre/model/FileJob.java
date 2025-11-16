@@ -17,7 +17,9 @@ import lombok.NoArgsConstructor;
 import org.creati.sicloReservationsApi.service.model.job.FileJobDto;
 import org.creati.sicloReservationsApi.service.model.job.FileType;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 
 @Entity
@@ -48,9 +50,9 @@ public class FileJob {
     @Column(columnDefinition = "TEXT")
     private String errorMessage;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private LocalDateTime finishedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
+    private Instant finishedAt;
 
     private Integer totalRecords;
     private Integer processedRecords;
@@ -69,14 +71,20 @@ public class FileJob {
     }
 
     public FileJobDto toDto(ObjectMapper objectMapper) {
+
+        ZoneId lima = ZoneId.of("America/Lima");
         return new FileJobDto(
                 this.getJobId(),
                 this.getFileName(),
                 this.getFileType().name(),
                 this.getStatus().name(),
                 this.getErrorMessage(),
-                this.getCreatedAt(),
-                this.getFinishedAt(),
+                Optional.ofNullable(this.getCreatedAt())
+                        .map(instant -> LocalDateTime.ofInstant(instant, lima))
+                        .orElse(null),
+                Optional.ofNullable(this.getFinishedAt())
+                        .map(instant -> LocalDateTime.ofInstant(instant, lima))
+                        .orElse(null),
                 Optional.ofNullable(this.getProcessingResult())
                         .map(string -> {
                             try {
