@@ -52,10 +52,6 @@ public class ReportsController {
             @Min(value = 1, message = "Page size must be at least 1")
             @RequestParam(defaultValue = "10") int size
     ) {
-        if (!from.isBefore(to)) {
-            throw new IllegalArgumentException("From date must be before To date");
-        }
-
         return ResponseEntity.ok(reportService.getClientReservationsPayments(from, to, client, page, size));
     }
 
@@ -71,10 +67,6 @@ public class ReportsController {
             @RequestParam String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir
     ) {
-        if (!from.isBefore(to)) {
-            throw new IllegalArgumentException("From date must be before To date");
-        }
-
         return ResponseEntity.ok(
                 reportService.getReservationTableByClientId(
                         from, to, clientId,
@@ -96,10 +88,6 @@ public class ReportsController {
             @RequestParam String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir
     ) {
-        if (!from.isBefore(to)) {
-            throw new IllegalArgumentException("From date must be before To date");
-        }
-
         return ResponseEntity.ok(
                 reportService.getPaymentTableByClientId(
                         from, to, clientId,
@@ -119,9 +107,6 @@ public class ReportsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "day") String timeUnit
     ) {
-        if (!from.isBefore(to)) {
-            throw new IllegalArgumentException("From date must be before To date");
-        }
         return reportService.getReservationGroupedReport(ReservationGraphReportDto.GroupBy.fromValue(groupBy), from, to, timeUnit);
     }
 
@@ -138,10 +123,6 @@ public class ReportsController {
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam Map<String, String> allParams
     ) {
-        if (!from.isBefore(to)) {
-            throw new IllegalArgumentException("From date must be before To date");
-        }
-
         Map<String, String> filters = allParams.entrySet().stream()
                 .filter(entry -> ReservationSpecifications.allowedFilters.contains(entry.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -181,10 +162,6 @@ public class ReportsController {
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam Map<String, String> allParams
     ) {
-        if (!from.isBefore(to)) {
-            throw new IllegalArgumentException("From date must be before To date");
-        }
-
         Map<String, String> filters = allParams.entrySet().stream()
                 .filter(entry -> PaymentSpecifications.allowedFilters.contains(entry.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
