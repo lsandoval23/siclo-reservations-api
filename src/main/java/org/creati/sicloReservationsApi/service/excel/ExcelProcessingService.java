@@ -106,22 +106,25 @@ public class ExcelProcessingService implements FileProcessingService {
                     fileData.getName(), fileType, jobId, batchProcessingResult);
 
         } catch (FileProcessingException | IOException exception) {
-            log.error("Error processing file {} of type {}: {}", fileData.getName(), fileType, exception.getMessage(), exception);
+            String errorMsg = String.format("Error processing file %s of type %s: %s", fileData.getName(), fileType, exception.getMessage());
+            log.error(errorMsg, exception);
             fileJobService.updateStatus(jobId, FileJobUpdateRequest.builder()
                     .status(FileJob.JobStatus.FAILED)
-                    .errorMessage(exception.getMessage())
+                    .errorMessage(errorMsg)
                     .build(), jobFound);
         } catch (IllegalArgumentException illegalArgumentException) {
-            log.error("Error in input file format: {}", illegalArgumentException.getMessage(), illegalArgumentException);
+            String errorMsg = String.format("Error in input file format: %s", illegalArgumentException.getMessage());
+            log.error(errorMsg, illegalArgumentException);
             fileJobService.updateStatus(jobId, FileJobUpdateRequest.builder()
-                    .errorMessage(illegalArgumentException.getMessage())
+                    .errorMessage(errorMsg)
                     .status(FileJob.JobStatus.FAILED)
                     .build(), jobFound);
         } catch (Exception e) {
-            log.error("Unexpected error processing file {} of type {}: {}", fileData.getName(), fileType, e.getMessage(), e);
+            String errorMsg = String.format("Unexpected error processing file %s of type %s: %s", fileData.getName(), fileType, e.getMessage());
+            log.error(errorMsg, e);
             fileJobService.updateStatus(jobId, FileJobUpdateRequest.builder()
                     .status(FileJob.JobStatus.FAILED)
-                    .errorMessage("Unexpected error: " + e.getMessage())
+                    .errorMessage(errorMsg)
                     .build(), jobFound);
         } finally {
             // Clean up the temporary file

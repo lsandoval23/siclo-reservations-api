@@ -64,7 +64,7 @@ public class ExcelUtils {
     public static Workbook createStreamingWorkbook(File file) throws IOException {
         String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1).toLowerCase();
         if (!"xlsx".equals(extension)) {
-            throw new IllegalArgumentException("StreamingReader only supports .xlsx files");
+            throw new IllegalArgumentException("Not supported file type only .xlsx files");
         }
 
         InputStream is = new FileInputStream(file);
