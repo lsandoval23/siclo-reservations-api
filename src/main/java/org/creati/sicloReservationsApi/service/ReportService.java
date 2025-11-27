@@ -10,7 +10,6 @@ import org.creati.sicloReservationsApi.service.model.reports.TopDisciplineDto;
 import org.springframework.lang.Nullable;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -18,7 +17,7 @@ public interface ReportService {
 
     // Reservation reports
 
-    ReservationGraphReportDto getReservationGroupedReport(ReservationGraphReportDto.GroupBy groupBy, LocalDate from, LocalDate to, String timeUnit);
+    ReservationGraphReportDto getReservationGroupedReport(String groupBy, LocalDate from, LocalDate to, String timeUnit);
 
     PagedResponse<ReservationTableDto> getReservationTable(
             LocalDate from, LocalDate to,  Map<String, String> filters,

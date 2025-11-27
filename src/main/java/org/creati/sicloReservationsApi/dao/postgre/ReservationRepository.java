@@ -18,7 +18,7 @@ public interface ReservationRepository extends BaseRepository<Reservation, Long>
 
     @Query(value = "SELECT * FROM get_reservations_time_series(:groupBy, :timeUnit,:fromDate, :toDate)", nativeQuery = true)
     List<ReservationReportProjection> getReservationsReportsTimeSeries(
-            @Param("groupBy") String groupBy,
+            @Param("groupBy") String[] groupBy,
             @Param("timeUnit") String timeUnit,
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate

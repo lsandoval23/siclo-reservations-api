@@ -232,7 +232,7 @@ CREATE INDEX idx_payment_method          ON payment_transaction(payment_method);
 -- ========================
 
 CREATE OR REPLACE FUNCTION public.get_reservations_time_series(
-    group_by text,
+    group_by text[],
     time_unit text,
     from_date date,
     to_date date
@@ -245,50 +245,44 @@ RETURNS TABLE(
 )
 LANGUAGE sql
 AS $function$
-SELECT
-    (CASE
-        WHEN group_by = 'studio'     THEN s.name
-        WHEN group_by = 'instructor' THEN i.name
-        WHEN group_by = 'discipline' THEN d.name
-    END)::text AS group_name,
-
-    (CASE
-        WHEN time_unit = 'day'   THEN r.reservation_date
-        WHEN time_unit = 'week'  THEN date_trunc('week', r.reservation_date)::date
-        WHEN time_unit = 'month' THEN date_trunc('month', r.reservation_date)::date
-        ELSE r.reservation_date
-    END) AS period_start,
-
-    (CASE
-        WHEN time_unit = 'day'   THEN r.reservation_date
-        WHEN time_unit = 'week'  THEN (date_trunc('week', r.reservation_date) + interval '6 days')::date
-        WHEN time_unit = 'month' THEN (date_trunc('month', r.reservation_date) + interval '1 month - 1 day')::date
-        ELSE r.reservation_date
-    END) AS period_end,
-
-    COUNT(r.reservation_id)::bigint AS total
-
-FROM reservation r
-LEFT JOIN room rm      ON r.room_id = rm.room_id
-LEFT JOIN studio s     ON rm.studio_id = s.studio_id
-LEFT JOIN instructor i ON r.instructor_id = i.instructor_id
-LEFT JOIN discipline d ON r.discipline_id = d.discipline_id
-
-WHERE r.reservation_date BETWEEN from_date AND to_date
-GROUP BY
-    group_name,
-    (CASE
-        WHEN time_unit = 'day'   THEN r.reservation_date
-        WHEN time_unit = 'week'  THEN date_trunc('week', r.reservation_date)::date
-        WHEN time_unit = 'month' THEN date_trunc('month', r.reservation_date)::date
-        ELSE r.reservation_date
-    END),
-    (CASE
-        WHEN time_unit = 'day'   THEN r.reservation_date
-        WHEN time_unit = 'week'  THEN (date_trunc('week', r.reservation_date) + interval '6 days')::date
-        WHEN time_unit = 'month' THEN (date_trunc('month', r.reservation_date) + interval '1 month - 1 day')::date
-        ELSE r.reservation_date
-    END)
+WITH groups AS (
+    SELECT r.*, rm.*, s.*, i.*, d.*,
+           string_agg(
+               CASE
+                   WHEN gb = 'studio'     THEN s.name
+                   WHEN gb = 'instructor' THEN i.name
+                   WHEN gb = 'discipline' THEN d.name
+               END,
+               ' / '
+               ORDER BY gb
+           ) AS group_name
+    FROM reservation r
+    LEFT JOIN room rm      ON r.room_id = rm.room_id
+    LEFT JOIN studio s     ON rm.studio_id = s.studio_id
+    LEFT JOIN instructor i ON r.instructor_id = i.instructor_id
+    LEFT JOIN discipline d ON r.discipline_id = d.discipline_id
+    CROSS JOIN unnest(group_by) AS gb
+    WHERE r.reservation_date BETWEEN from_date AND to_date
+    GROUP BY r.reservation_id, rm.room_id, s.studio_id, i.instructor_id, d.discipline_id
+),
+agg AS (
+    SELECT
+        group_name,
+        (CASE
+            WHEN time_unit = 'day'   THEN reservation_date
+            WHEN time_unit = 'week'  THEN date_trunc('week', reservation_date)::date
+            WHEN time_unit = 'month' THEN date_trunc('month', reservation_date)::date
+        END) AS period_start,
+        (CASE
+            WHEN time_unit = 'day'   THEN reservation_date
+            WHEN time_unit = 'week'  THEN (date_trunc('week', reservation_date) + interval '6 days')::date
+            WHEN time_unit = 'month' THEN (date_trunc('month', reservation_date) + interval '1 month - 1 day')::date
+        END) AS period_end,
+        COUNT(*) AS total
+    FROM groups
+    GROUP BY group_name, period_start, period_end
+)
+SELECT * FROM agg
 ORDER BY group_name, period_start;
 $function$;
 

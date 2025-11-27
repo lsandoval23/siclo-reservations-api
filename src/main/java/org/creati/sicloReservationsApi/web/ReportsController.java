@@ -107,7 +107,7 @@ public class ReportsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "day") String timeUnit
     ) {
-        return reportService.getReservationGroupedReport(ReservationGraphReportDto.GroupBy.fromValue(groupBy), from, to, timeUnit);
+        return reportService.getReservationGroupedReport(groupBy, from, to, timeUnit);
     }
 
 

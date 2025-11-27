@@ -30,6 +30,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,12 +56,18 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public ReservationGraphReportDto getReservationGroupedReport(
-            ReservationGraphReportDto.GroupBy groupBy,
+            String groupBy,
             LocalDate from,
             LocalDate to,
             String timeUnit) {
 
-        List<ReservationReportProjection> rows = reservationRepository.getReservationsReportsTimeSeries(groupBy.getFieldName(), timeUnit, from, to);
+        String[] groupByFields = Arrays.stream(groupBy.split(";"))
+                .map(String::trim)
+                .toArray(String[]::new);
+        // Validation
+        Arrays.stream(groupByFields).forEach(ReservationGraphReportDto.GroupBy::fromValue);
+
+        List<ReservationReportProjection> rows = reservationRepository.getReservationsReportsTimeSeries(groupByFields, timeUnit, from, to);
 
         LocalDate minPeriodStart = rows.stream()
                 .map(ReservationReportProjection::getPeriodStart)
