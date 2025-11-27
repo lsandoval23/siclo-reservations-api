@@ -1,6 +1,7 @@
 package org.creati.sicloReservationsApi.web;
 
 import jakarta.validation.constraints.Min;
+import lombok.extern.slf4j.Slf4j;
 import org.creati.sicloReservationsApi.dao.spec.PaymentSpecifications;
 import org.creati.sicloReservationsApi.dao.spec.ReservationSpecifications;
 import org.creati.sicloReservationsApi.service.ReportService;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Validated
 @RestController
 @PreAuthorize("hasAuthority('REPORT_VIEW')")
@@ -107,6 +109,7 @@ public class ReportsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "day") String timeUnit
     ) {
+        log.info("GroupBy received: {}", groupBy);
         return reportService.getReservationGroupedReport(groupBy, from, to, timeUnit);
     }
 
