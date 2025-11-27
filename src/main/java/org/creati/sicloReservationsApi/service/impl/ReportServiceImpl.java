@@ -61,7 +61,7 @@ public class ReportServiceImpl implements ReportService {
             LocalDate to,
             String timeUnit) {
 
-        String[] groupByFields = Arrays.stream(groupBy.split(";"))
+        String[] groupByFields = Arrays.stream(groupBy.split(","))
                 .map(String::trim)
                 .toArray(String[]::new);
         // Validation
