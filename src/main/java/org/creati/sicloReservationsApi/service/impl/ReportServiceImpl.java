@@ -67,6 +67,8 @@ public class ReportServiceImpl implements ReportService {
         // Validation
         Arrays.stream(groupByFields).forEach(ReservationGraphReportDto.GroupBy::fromValue);
 
+        log.info("Generating reservation grouped report from {} to {} grouped by {} with time unit {}",
+                from, to, String.join("; ", groupByFields), timeUnit);
         List<ReservationReportProjection> rows = reservationRepository.getReservationsReportsTimeSeries(groupByFields, timeUnit, from, to);
 
         LocalDate minPeriodStart = rows.stream()
