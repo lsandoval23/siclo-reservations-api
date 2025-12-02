@@ -22,12 +22,15 @@ public interface ClientRepository extends BaseRepository<Client, Long> {
     @Query(value = """
             SELECT *
             FROM get_clients_reservations_payments(:fromDate, :toDate, :clientFilter)
+            ORDER BY
+                CASE WHEN :sortField = 'total_amount_received' THEN total_amount_received END DESC
             LIMIT :limit OFFSET :offset
             """,
             nativeQuery = true)
     List<ClientReservationsPaymentsProjection> getClientReservationsPayments(
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate,
+            @Param("sortField") String sortField,
             @Param("clientFilter") String clientFilter,
             @Param("limit") int limit,
             @Param("offset") int offset

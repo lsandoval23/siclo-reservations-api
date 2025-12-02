@@ -49,12 +49,13 @@ public class ReportsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) String client,
+            @RequestParam(required = false) String sortField,
             @Min(value = 0, message = "Page number must be 0 or greater")
             @RequestParam(defaultValue = "0") int page,
             @Min(value = 1, message = "Page size must be at least 1")
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(reportService.getClientReservationsPayments(from, to, client, page, size));
+        return ResponseEntity.ok(reportService.getClientReservationsPayments(from, to, client, page, size, sortField));
     }
 
     @GetMapping("/clients/{clientId}/reservations")

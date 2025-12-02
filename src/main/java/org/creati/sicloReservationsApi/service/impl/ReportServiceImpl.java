@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -269,12 +270,18 @@ public class ReportServiceImpl implements ReportService {
     public PagedResponse<ClientReservationsPaymentsDto> getClientReservationsPayments(
             LocalDate from, LocalDate to,
             @Nullable String clientFilter,
-            int page, int size) {
+            int page, int size,
+            String sortField) {
 
         int limit = size;
         int offset = page * size;
 
-        List<ClientReservationsPaymentsProjection> rows = clientRepository.getClientReservationsPayments(from, to, clientFilter, limit, offset);
+        List<String> allowedSortFields = List.of("total_amount_received");
+        if (Objects.nonNull(sortField) && !allowedSortFields.contains(sortField)) {
+            throw new IllegalArgumentException("Invalid sort field: " + sortField);
+        }
+
+        List<ClientReservationsPaymentsProjection> rows = clientRepository.getClientReservationsPayments(from, to, sortField, clientFilter, limit, offset);
         long totalElements = clientRepository.countClientReservationsPayments(from, to, clientFilter);
         int totalPages = (int) Math.ceil((double) totalElements / size);
         boolean last = page + 1 >= totalPages;

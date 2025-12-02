@@ -38,7 +38,8 @@ public interface ReportService {
 
     PagedResponse<ClientReservationsPaymentsDto> getClientReservationsPayments(
             LocalDate from, LocalDate to, @Nullable String clientFilter,
-            int page, int size);
+            int page, int size,
+            String sortField);
 
     PagedResponse<ReservationTableDto> getReservationTableByClientId(
             LocalDate from, LocalDate to, Long clientId,
